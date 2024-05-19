@@ -85,7 +85,7 @@ func (m AwsS3SelectRegion) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.selected[m.cursor] = struct{}{}
 			}
 		case "enter":
-			for k, _ := range m.selected {
+			for k := range m.selected {
 				RunCommand.Options.Regions = append(RunCommand.Options.Regions, m.choices[k])
 			}
 			return S3ReturnsEmptyBucket().Update(nil)

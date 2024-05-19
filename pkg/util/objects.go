@@ -12,13 +12,13 @@ type BucketDTO struct {
 	SizeOfBucket     float64
 	LastUpdateDate   time.Time
 	Cost             float64
-	StorageClassSize StorageClassSize
+	StorageClassSize StorageClassSizeMap
 	Region           string
 }
 
 type StorageClassSize struct {
-	SizeMap StorageClassSizeMap
+	SizeMap RegionsStorageMap
 	Mutex   sync.Mutex
 }
-
+type RegionsStorageMap map[string]map[string]float64
 type StorageClassSizeMap map[string]float64

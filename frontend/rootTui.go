@@ -21,9 +21,8 @@ var RunCommand = &Command{
 }
 
 type base struct {
-	choices  []string
-	cursor   int
-	selected map[int]struct{}
+	choices []string
+	cursor  int
 }
 
 func (m base) Init() tea.Cmd {

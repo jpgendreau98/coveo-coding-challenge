@@ -2,13 +2,11 @@ package cmd
 
 import (
 	"fmt"
-	"projet-devops-coveo/pkg/aws"
+	"projet-devops-coveo/pkg"
 	"projet-devops-coveo/pkg/util"
-	"sync"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"go.uber.org/ratelimit"
 )
 
 const (
@@ -72,7 +70,7 @@ func NewS3Command() *cobra.Command {
 					SizeConversion: float64(getSizeConstant(viper.GetString(SIZE_CONV))),
 				},
 			}
-			err := RunS3Command(options)
+			err := pkg.RunS3Command(options)
 			if err != nil {
 				return err
 			}
@@ -113,79 +111,4 @@ func getSizeConstant(size string) int {
 		return util.SIZE_CONV_TB
 	}
 	return util.SIZE_CONV_BY
-}
-
-func RunS3Command(options *util.CliOptions) error {
-	//Start the ratelimiter
-	limiter := ratelimit.New(options.RateLimit)
-	//Fetching the price of the day.
-	fmt.Println("Fetching prices as of today...")
-	priceList := fetchPrices()
-	fmt.Println("Price fetched Successfully!")
-
-	fmt.Println("Starting the scrapping of S3 Buckets")
-
-	// Init GlobalStorageMap to use it on all s3 regions
-	var allBuckets []*util.BucketDTO
-	var globalStorageClassSize = &util.StorageClassSize{
-		SizeMap: make(util.StorageClassSizeMap),
-	}
-	// Create initial connection for scrapping of all the buckets since this call is regionless
-	fs, err := aws.InitConnection(options.Regions[0], *options, globalStorageClassSize, limiter)
-	if err != nil {
-		fmt.Println(err)
-	}
-	// Filter buckets with the filter given by user
-	buckets := fs.GetBucketsFiltered()
-	// We have to sort the liste of buckets for increase performance for search functions
-	aws.SortListBasedOnRegion(buckets)
-	//Since all the region
-	bucketChan := make(chan []*util.BucketDTO, len(buckets))
-	wg := new(sync.WaitGroup)
-	for _, region := range options.Regions {
-		wg.Add(1)
-		//Init a new connection with the region
-		fs, err := aws.InitConnection(region, *options, globalStorageClassSize, limiter)
-		if err != nil {
-			fmt.Println(err)
-			continue
-		}
-		//Return all the bucket in the region
-		regionBucket := aws.GetBucketOfTheRegion(buckets, region)
-		//Using the sorted lists from earlier, the search is way faster to find the index of the buckets
-		buckets = aws.RemoveScrappedBucketFromList(regionBucket, buckets)
-		//Starting multi-threading on the scrap of objects.
-		go fs.ListObjectsInBucket(regionBucket, region, priceList, wg, bucketChan)
-
-	}
-	wg.Wait()
-	close(bucketChan)
-	for bucket := range bucketChan {
-		allBuckets = append(allBuckets, bucket...)
-	}
-
-	fs.SetBucketPrices(allBuckets, priceList)
-	fmt.Println("Buckets have been fetched successfuly!")
-	fmt.Println("Printing data...")
-	util.OutputData(allBuckets, *options.OutputOptions)
-	return nil
-}
-
-func fetchPrices() aws.MasterPriceList {
-	svc := aws.InitConnectionPricingList()
-	var priceList = make(aws.MasterPriceList)
-	for _, storageClassSKU := range aws.StorageClassesSKU {
-		result, err := svc.GetPriceListWithSku(storageClassSKU)
-		if err != nil {
-			fmt.Println(err)
-			continue
-		}
-		decodedPriceList, err := aws.DecodePricingList(result)
-		if err != nil {
-			fmt.Println(err)
-			continue
-		}
-		priceList[aws.GetStorageClassNameBySky(storageClassSKU)] = decodedPriceList
-	}
-	return priceList
 }

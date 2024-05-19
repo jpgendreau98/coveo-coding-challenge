@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"projet-devops-coveo/frontend"
+	"projet-devops-coveo/pkg"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
@@ -32,7 +33,7 @@ func NewGuiCommand() *cobra.Command {
 				switch frontend.RunCommand.Command {
 				case "AWSS3":
 					fmt.Println(frontend.RunCommand.Options)
-					err := RunS3Command(frontend.RunCommand.Options)
+					err := pkg.RunS3Command(frontend.RunCommand.Options)
 					if err != nil {
 						return err
 					}

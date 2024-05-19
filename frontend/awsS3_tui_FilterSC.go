@@ -85,7 +85,7 @@ func (m AwsS3FilterSC) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.selected[m.cursor] = struct{}{}
 			}
 		case "enter":
-			for k, _ := range m.selected {
+			for k := range m.selected {
 				RunCommand.Options.FilterByStorageClass = append(RunCommand.Options.FilterByStorageClass, m.choices[k])
 			}
 			return S3SelectRegion().Update(nil)

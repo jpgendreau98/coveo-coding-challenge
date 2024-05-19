@@ -137,9 +137,10 @@ func (fs *S3) FetchBucket(bucket *util.BucketDTO, bucketChan chan (*util.BucketD
 				}
 
 				totalSize += *obj.Size
-				storageClassSize[aws.StringValue(obj.StorageClass)] += float64(*obj.Size)
+				storageClassSize[aws.StringValue(obj.StorageClass)] += (float64(*obj.Size) / (math.Pow(float64(1024), fs.options.OutputOptions.SizeConversion)))
+
 				fs.totalStorageClassSize.Mutex.Lock()
-				fs.totalStorageClassSize.SizeMap[aws.StringValue(obj.StorageClass)] += float64(*obj.Size)
+				fs.totalStorageClassSize.SizeMap[fs.region][aws.StringValue(obj.StorageClass)] += float64(*obj.Size)
 				fs.totalStorageClassSize.Mutex.Unlock()
 
 				if lastModifiedBucket.Before(*obj.LastModified) {
@@ -163,20 +164,20 @@ func (fs *S3) FetchBucket(bucket *util.BucketDTO, bucketChan chan (*util.BucketD
 
 	bucket.NbOfFiles = nbOfFiles
 	bucket.SizeOfBucket = float64(totalSize) / (math.Pow(float64(1024), fs.options.OutputOptions.SizeConversion))
-	bucket.StorageClassSize.SizeMap = storageClassSize
+	bucket.StorageClassSize = storageClassSize
 	bucket.LastUpdateDate = lastModifiedBucket
 
 	bucketChan <- bucket
 }
 
-func (fs *S3) SetBucketPrices(buckets []*util.BucketDTO, priceList MasterPriceList) {
-	tierListPrice := GetTierPriceList(fs.totalStorageClassSize.SizeMap, priceList)
+func (fs *S3) SetBucketCost(buckets []*util.BucketDTO, priceList MasterPriceList) {
+	tierListPrice := GetTierPriceList(fs.totalStorageClassSize.SizeMap[fs.region], priceList[fs.region])
 	for _, bucket := range buckets {
 		var total float64
-		for k, v := range bucket.StorageClassSize.SizeMap {
-			totalSize := fs.totalStorageClassSize.SizeMap[k]
-			price := tierListPrice[k]
-			total += (TransformByteToGB(v, fs.options.OutputOptions.SizeConversion) / TransformByteToGB(totalSize, fs.options.OutputOptions.SizeConversion)) * price
+		for k, v := range bucket.StorageClassSize {
+			totalSize := float64(fs.totalStorageClassSize.SizeMap[fs.region][k]) / (math.Pow(float64(1024), fs.options.OutputOptions.SizeConversion))
+			total += (TransformByteToGB(v, fs.options.OutputOptions.SizeConversion) / TransformByteToGB(totalSize, fs.options.OutputOptions.SizeConversion)) *
+				(tierListPrice[k] * TransformByteToGB(totalSize, fs.options.OutputOptions.SizeConversion))
 		}
 		bucket.Cost = total
 	}
