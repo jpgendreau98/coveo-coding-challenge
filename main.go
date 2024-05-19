@@ -5,14 +5,6 @@ import (
 	"projet-devops-coveo/pkg"
 )
 
-type Price struct {
-	Terms Terms `json:"terms"`
-}
-
-type Terms struct {
-	OnDemand map[string]map[string]interface{} `json:"onDemand"`
-}
-
 func main() {
 	// p := tea.NewProgram(root.InitialBase())
 	// if _, err := p.Run(); err != nil {
@@ -38,17 +30,36 @@ func main() {
 
 	fmt.Println("Price fetched Successfully!")
 	fmt.Println("Starting the scrapping of S3 Buckets")
-	fs, err := pkg.InitConnection()
+
+	options := pkg.CliOptions{
+		// FilterByStorageClass: []string{"STANDARD"},
+		ReturnEmptyBuckets: true,
+		Regions:            []string{"ca-central-1", "us-east-1", "us-west-1"},
+	}
+
+	var allBuckets []*pkg.BucketDTO
+	fs, err := pkg.InitConnection("ca-central-1")
 	if err != nil {
 		fmt.Println(err)
 	}
+	buckets := fs.ListDirectories(options)
+	pkg.SortListBasedOnRegion(buckets)
+	for _, region := range options.Regions {
+		fs, err := pkg.InitConnection(region)
+		if err != nil {
+			fmt.Println(err)
+		}
+		regionBucket := pkg.GetBucketOfTheRegion(buckets, region)
 
-	buckets := fs.ListDirectories()
-	DTOBuckets := fs.GetObjectMetadata(buckets, PriceList)
-	fs.GetBucketPrices(DTOBuckets, PriceList)
-	for _, bucket := range DTOBuckets {
-		fmt.Printf("%+v \n", bucket)
+		DTOBuckets := fs.GetObject(regionBucket, PriceList, options)
+		fs.SetBucketPrices(DTOBuckets, PriceList)
+
+		allBuckets = append(allBuckets, DTOBuckets...)
+		buckets = pkg.RemoveScrappedBucketFromList(regionBucket, buckets)
 	}
 	fmt.Println("Buckets have been fetched successfuly!")
+	pkg.OutputData(allBuckets, pkg.OutputOptions{
+		// OrderByDec: "name",
+	})
 
 }

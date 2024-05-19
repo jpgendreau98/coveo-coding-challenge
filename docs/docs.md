@@ -10,7 +10,7 @@ Requis:
 Specs:
 
 - Concurrence
-- throttle
+- throttle based on AWS API max rate
 - Informations sur avancement
 
 Logic:
@@ -41,3 +41,12 @@ SDK :
 import "github.com/aws/aws-sdk-go-v2"
 
 TUI: BubbleTea : https://github.com/charmbracelet/bubbletea
+
+
+Output: 
+Flags:
+- Output group-by (Ex. :region, )
+- Output filter-by (Ex.: name, storage-class)
+- Output order-by-dec (Ex.: price, name, storage-class, size)
+- Output order-by-inc (Ex.: price, name, storage-class, size)
+- Verbose ?

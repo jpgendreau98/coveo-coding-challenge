@@ -24,12 +24,12 @@ Chez Coveo, on aime bien le principe KISS.
 ### L’outil doit permettre d’obtenir les informations suivantes:
 
 Pour chaque bucket:
-  - Nom DONE
-  - Date de création DONE
-  - Nombre de fichiers DONE
-  - Taille totale des fichiers DONE
+  - Nom 
+  - Date de création 
+  - Nombre de fichiers 
+  - Taille totale des fichiers 
   - Date de mise-à-jour de l'objet le plus récent 
-  - Et le plus important de tous, **combien ça coûte...** DONE
+  - Et le plus important de tous, **combien ça coûte...** 
 
 ### Les options suivantes doivent être supportées:
 

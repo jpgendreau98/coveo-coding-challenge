@@ -1,0 +1,12 @@
+MVP:
+- pour chaque bucket: DONE
+  - Nom DONE
+  - Date de création DONE
+  - Nombre de fichiers DONE
+  - Taille totale des fichiers DONE
+  - Date de mise-à-jour de l'objet le plus récent Done
+  - Et le plus important de tous, **combien ça coûte...** Done
+- Cli interface
+- Concurrence DONE
+- throttle
+- Output data with flags DONE

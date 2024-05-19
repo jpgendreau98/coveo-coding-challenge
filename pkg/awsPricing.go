@@ -75,19 +75,22 @@ func getPriceForSize(sizeGB float64, priceListForSku PriceList) (price float64, 
 		for _, l := range j.PriceDimensions {
 			bRange, err := strconv.ParseFloat(l.BeginRange, 64)
 			if err != nil {
-				return price, err
+				fmt.Println(err)
+				continue
 			}
 			var eRange float64
 			if l.EndRange != "Inf" {
 				eRange, err = strconv.ParseFloat(l.EndRange, 64)
 				if err != nil {
-					return price, err
+					fmt.Println(err)
+					continue
 				}
 
 				if sizeGB > bRange && sizeGB < eRange {
 					unitPrice, err := strconv.ParseFloat(l.PricePerUnit.Usd, 32)
 					if err != nil {
-						return price, err
+						fmt.Println(err)
+						continue
 					}
 					return unitPrice, nil
 				}
@@ -95,7 +98,8 @@ func getPriceForSize(sizeGB float64, priceListForSku PriceList) (price float64, 
 				if sizeGB > bRange {
 					unitPrice, err := strconv.ParseFloat(l.PricePerUnit.Usd, 32)
 					if err != nil {
-						return price, err
+						fmt.Println(err)
+						continue
 					}
 					return unitPrice, nil
 				}
