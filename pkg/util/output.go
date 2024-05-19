@@ -1,4 +1,4 @@
-package pkg
+package util
 
 import (
 	"cmp"
@@ -7,13 +7,6 @@ import (
 	"os"
 	"slices"
 )
-
-type OutputOptions struct {
-	GroupBy    string
-	OrderByDec string
-	OrderByInc string
-	FileOutput string
-}
 
 func OutputData(buckets []*BucketDTO, options OutputOptions) error {
 	output := make(map[string]interface{})

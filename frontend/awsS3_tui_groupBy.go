@@ -2,7 +2,7 @@ package frontend
 
 import (
 	"fmt"
-	"projet-devops-coveo/pkg"
+	"projet-devops-coveo/pkg/util"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -18,7 +18,7 @@ func (m AwsS3GroupBy) Init() tea.Cmd {
 	return nil
 }
 
-var Options = pkg.CliOptions{}
+var Options = util.CliOptions{}
 
 func S3GroupBy() AwsS3GroupBy {
 	return AwsS3GroupBy{

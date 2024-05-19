@@ -3,19 +3,21 @@ package frontend
 import (
 	"fmt"
 
-	"projet-devops-coveo/pkg"
+	"projet-devops-coveo/pkg/util"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 type Command struct {
 	Command string
-	Options *pkg.CliOptions
+	Options *util.CliOptions
 	Done    bool
 }
 
 var RunCommand = &Command{
-	Options: &pkg.CliOptions{},
+	Options: &util.CliOptions{
+		OutputOptions: &util.OutputOptions{},
+	},
 }
 
 type base struct {

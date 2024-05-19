@@ -69,3 +69,6 @@ Flags:
 Input//
 - filterByNames
     Input
+
+RATELIMIT AWS:
+5500 GET per second per prefix ()

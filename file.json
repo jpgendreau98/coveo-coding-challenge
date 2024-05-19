@@ -2,34 +2,45 @@
     "S3": {
         "ca-central-1": [
             {
-                "Name": "coveo12345-poc-2",
-                "CreationDate": "2024-05-18T15:32:07Z",
-                "NbOfFiles": 0,
-                "SizeOfBucket": 0,
-                "LastUpdateDate": "0001-01-01T00:00:00Z",
-                "Cost": 0,
-                "StorageClassSize": {},
-                "Region": "ca-central-1"
-            },
-            {
                 "Name": "coveo12345-poc-3",
                 "CreationDate": "2024-05-18T15:32:14Z",
                 "NbOfFiles": 0,
                 "SizeOfBucket": 0,
                 "LastUpdateDate": "0001-01-01T00:00:00Z",
                 "Cost": 0,
-                "StorageClassSize": {},
+                "StorageClassSize": {
+                    "SizeMap": {},
+                    "Mutex": {}
+                },
+                "Region": "ca-central-1"
+            },
+            {
+                "Name": "coveo12345-poc-2",
+                "CreationDate": "2024-05-18T15:32:07Z",
+                "NbOfFiles": 100,
+                "SizeOfBucket": 0.0005848705768585205,
+                "LastUpdateDate": "2024-05-19T11:42:07-04:00",
+                "Cost": 0.006202247328637692,
+                "StorageClassSize": {
+                    "SizeMap": {
+                        "STANDARD": 628000
+                    },
+                    "Mutex": {}
+                },
                 "Region": "ca-central-1"
             },
             {
                 "Name": "coveo12345-poc",
                 "CreationDate": "2024-05-18T15:31:59Z",
                 "NbOfFiles": 79,
-                "SizeOfBucket": 489840,
+                "SizeOfBucket": 0.000456199049949646,
                 "LastUpdateDate": "2024-05-18T12:07:07-04:00",
-                "Cost": 0.01104000024497509,
+                "Cost": 0.004837752916337399,
                 "StorageClassSize": {
-                    "STANDARD": 489840
+                    "SizeMap": {
+                        "STANDARD": 489840
+                    },
+                    "Mutex": {}
                 },
                 "Region": "ca-central-1"
             }
@@ -42,7 +53,10 @@
                 "SizeOfBucket": 0,
                 "LastUpdateDate": "0001-01-01T00:00:00Z",
                 "Cost": 0,
-                "StorageClassSize": {},
+                "StorageClassSize": {
+                    "SizeMap": {},
+                    "Mutex": {}
+                },
                 "Region": "us-east-1"
             }
         ],
@@ -54,7 +68,10 @@
                 "SizeOfBucket": 0,
                 "LastUpdateDate": "0001-01-01T00:00:00Z",
                 "Cost": 0,
-                "StorageClassSize": {},
+                "StorageClassSize": {
+                    "SizeMap": {},
+                    "Mutex": {}
+                },
                 "Region": "us-west-1"
             }
         ]

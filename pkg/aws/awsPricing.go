@@ -1,9 +1,11 @@
-package pkg
+package aws
 
 import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+
+	"projet-devops-coveo/pkg/util"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -53,7 +55,7 @@ func DecodePricingList(productPrice *pricing.GetProductsOutput) (priceList Price
 	return priceList, nil
 }
 
-func GetTierPriceList(totalStorageClassSize StorageClassSize, priceList MasterPriceList) map[string]float64 {
+func GetTierPriceList(totalStorageClassSize util.StorageClassSizeMap, priceList MasterPriceList) map[string]float64 {
 	tierList := make(map[string]float64)
 	for k, v := range totalStorageClassSize {
 		priceListForSku := priceList[k]
