@@ -46,7 +46,26 @@ TUI: BubbleTea : https://github.com/charmbracelet/bubbletea
 Output: 
 Flags:
 - Output group-by (Ex. :region, )
-- Output filter-by (Ex.: name, storage-class)
-- Output order-by-dec (Ex.: price, name, storage-class, size)
-- Output order-by-inc (Ex.: price, name, storage-class, size)
+- Output filter-by (Ex.: name, storage-class) DONE
+- Output order-by-dec (Ex.: price, name, storage-class, size) DONE
+- Output order-by-inc (Ex.: price, name, storage-class, size) DONE
 - Verbose ?
+
+- groupby
+    - region
+- orderbyINC
+    - price
+    - name
+    - storage-class
+    - size
+- orderbyDEC
+    - price
+    - name
+    - storage-class
+    - size
+- filterByStorageClass
+    - STANDARD
+    - ...
+Input//
+- filterByNames
+    Input
