@@ -33,6 +33,9 @@ const (
 
 	BUCKET_REGIONS             = "regions"
 	BUCKET_REGIONS_DESCRIPTION = "Regions in which the bucket are created"
+
+	OUTPUT             = "output"
+	OUTPUT_DESCRIPTION = "Output to a file (Enter the file name)"
 )
 
 func NewS3Command() *cobra.Command {
@@ -41,14 +44,17 @@ func NewS3Command() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			options := &pkg.CliOptions{
 				Regions:              viper.GetStringSlice(BUCKET_REGIONS),
-				GroupBy:              viper.GetString(GROUP_BY),
-				OrderByINC:           viper.GetString(ORDER_BY_INC),
-				OrderByDEC:           viper.GetString(ORDER_BY_DEC),
 				FilterByName:         viper.GetStringSlice(FILTER_BY_NAME),
 				ReturnEmptyBuckets:   viper.GetBool(RETURNS_EMTPY),
 				FilterByStorageClass: viper.GetStringSlice(FILTER_BY_STORAGE_CLASS),
+				OutputOptions: &pkg.OutputOptions{
+					GroupBy:    viper.GetString(GROUP_BY),
+					OrderByInc: viper.GetString(ORDER_BY_INC),
+					OrderByDec: viper.GetString(ORDER_BY_DEC),
+					FileOutput: viper.GetString(OUTPUT),
+				},
 			}
-			err := RunS3Command(options, &pkg.OutputOptions{})
+			err := RunS3Command(options)
 			if err != nil {
 				return err
 			}
@@ -58,6 +64,7 @@ func NewS3Command() *cobra.Command {
 	cmd.Flags().String(ORDER_BY_INC, ORDER_BY_INC_DEFAULT, ORDER_BY_INC_DESCRIPTION)
 	cmd.Flags().String(ORDER_BY_DEC, ORDER_BY_DEC_DEFAULT, ORDER_BY_DEC_DESCRIPTION)
 	cmd.Flags().String(GROUP_BY, GROUP_BY_DEFAULT, GROUP_BY_DESCRIPTION)
+	cmd.Flags().String(OUTPUT, "", OUTPUT_DESCRIPTION)
 	cmd.Flags().Bool(RETURNS_EMTPY, RETURNS_EMTPY_DEFAULT, RETURNS_EMTPY_DESCRIPTION)
 	cmd.Flags().StringSlice(FILTER_BY_NAME, nil, FILTER_BY_NAME_DESCRIPTION)
 	cmd.Flags().StringSlice(BUCKET_REGIONS, []string{"ca-central-1"}, BUCKET_REGIONS_DESCRIPTION)
@@ -71,7 +78,7 @@ func NewS3Command() *cobra.Command {
 	return cmd
 }
 
-func RunS3Command(options *pkg.CliOptions, outputOptions *pkg.OutputOptions) error {
+func RunS3Command(options *pkg.CliOptions) error {
 	fmt.Println("Fetching prices as of today...")
 	priceList := fetchPrices()
 	fmt.Println("Price fetched Successfully!")
@@ -99,9 +106,7 @@ func RunS3Command(options *pkg.CliOptions, outputOptions *pkg.OutputOptions) err
 		buckets = pkg.RemoveScrappedBucketFromList(regionBucket, buckets)
 	}
 	fmt.Println("Buckets have been fetched successfuly!")
-	pkg.OutputData(allBuckets, pkg.OutputOptions{
-		// OrderByDec: "name",
-	})
+	pkg.OutputData(allBuckets, *options.OutputOptions)
 	return nil
 }
 

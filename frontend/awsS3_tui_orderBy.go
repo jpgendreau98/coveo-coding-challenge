@@ -75,21 +75,21 @@ func (m AwsS3OrderBy) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "enter":
 			switch m.choices[m.cursor] {
 			case "name (INC)":
-				RunCommand.Options.OrderByINC = "name"
+				RunCommand.Options.OutputOptions.OrderByInc = "name"
 			case "price (INC)":
-				RunCommand.Options.OrderByINC = "price"
+				RunCommand.Options.OutputOptions.OrderByInc = "price"
 			case "storage-class (INC)":
-				RunCommand.Options.OrderByINC = "storage-class"
+				RunCommand.Options.OutputOptions.OrderByInc = "storage-class"
 			case "size (INC)":
-				RunCommand.Options.OrderByINC = "size"
+				RunCommand.Options.OutputOptions.OrderByInc = "size"
 			case "name (DEC)":
-				RunCommand.Options.OrderByDEC = "name"
+				RunCommand.Options.OutputOptions.OrderByDec = "name"
 			case "price (DEC)":
-				RunCommand.Options.OrderByDEC = "price"
+				RunCommand.Options.OutputOptions.OrderByDec = "price"
 			case "storage-class (DEC)":
-				RunCommand.Options.OrderByDEC = "storage-class"
+				RunCommand.Options.OutputOptions.OrderByDec = "storage-class"
 			case "size (DEC)":
-				RunCommand.Options.OrderByDEC = "size"
+				RunCommand.Options.OutputOptions.OrderByDec = "size"
 			}
 			return S3FilterSC().Update(nil)
 

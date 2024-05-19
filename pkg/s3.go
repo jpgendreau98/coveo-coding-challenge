@@ -116,10 +116,12 @@ func (fs *S3) FetchBucket(bucket *BucketDTO, bucketChan chan (*BucketDTO), optio
 			nbOfFiles = aws.Int64Value(page.KeyCount)
 			for _, obj := range page.Contents {
 				if options.FilterByStorageClass != nil {
-					if !slices.Contains(options.FilterByStorageClass, aws.StringValue(obj.StorageClass)) {
+					if len(options.FilterByStorageClass) != 0 && options.FilterByStorageClass != nil &&
+						!slices.Contains(options.FilterByStorageClass, aws.StringValue(obj.StorageClass)) {
 						continue
 					}
 				}
+
 				totalSize += *obj.Size
 				storageClassSize[aws.StringValue(obj.StorageClass)] += *obj.Size
 				fs.totalStorageClassSize[aws.StringValue(obj.StorageClass)] += *obj.Size

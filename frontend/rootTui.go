@@ -9,15 +9,13 @@ import (
 )
 
 type Command struct {
-	Command   string
-	Options   *pkg.CliOptions
-	OutputOpt *pkg.OutputOptions
-	Done      bool
+	Command string
+	Options *pkg.CliOptions
+	Done    bool
 }
 
 var RunCommand = &Command{
-	Options:   &pkg.CliOptions{},
-	OutputOpt: &pkg.OutputOptions{},
+	Options: &pkg.CliOptions{},
 }
 
 type base struct {

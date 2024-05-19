@@ -32,7 +32,7 @@ func NewGuiCommand() *cobra.Command {
 				switch frontend.RunCommand.Command {
 				case "AWSS3":
 					fmt.Println(frontend.RunCommand.Options)
-					err := RunS3Command(frontend.RunCommand.Options, frontend.RunCommand.OutputOpt)
+					err := RunS3Command(frontend.RunCommand.Options)
 					if err != nil {
 						return err
 					}

@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"encoding/json"
 	"fmt"
+	"os"
 	"slices"
 )
 
@@ -35,7 +36,14 @@ func OutputData(buckets []*BucketDTO, options OutputOptions) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(string(data))
+	if options.FileOutput != "" {
+		err := outputToFilePath(options.FileOutput, data)
+		if err != nil {
+			return err
+		}
+	} else {
+		fmt.Println(string(data))
+	}
 	return nil
 }
 
@@ -84,4 +92,17 @@ func orderByDec(key string, data []*BucketDTO) []*BucketDTO {
 		slices.Reverse(data)
 	}
 	return data
+}
+
+func outputToFilePath(fileName string, data []byte) error {
+	file, err := os.Create(fileName)
+	defer file.Close()
+	if err != nil {
+		return err
+	}
+	_, err = file.Write(data)
+	if err != nil {
+		return err
+	}
+	return nil
 }
