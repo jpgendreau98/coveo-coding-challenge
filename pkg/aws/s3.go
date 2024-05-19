@@ -52,20 +52,27 @@ func (fs *S3) GetBucketsFiltered() (bucketList []*util.BucketDTO) {
 func (fs *S3) FilterBuckets(buckets []*s3.Bucket) (bucketList []*util.BucketDTO) {
 	for _, bucket := range buckets {
 		location := fs.GetBucketLocation(bucket)
-		if slices.Contains(fs.options.Regions, location) {
-			// Filter by names if there's a filter activated
-			if fs.options.FilterByName != nil && len(fs.options.FilterByName) != 0 && !slices.Contains(fs.options.FilterByName, aws.StringValue(bucket.Name)) {
-				continue
-			}
-
-			bucketList = append(bucketList, &util.BucketDTO{
-				Name:         aws.StringValue(bucket.Name),
-				Region:       location,
-				CreationDate: *bucket.CreationDate,
-			})
+		bucket := fs.filterbucket(location, aws.StringValue(bucket.Name), *bucket.CreationDate)
+		if bucket != nil {
+			bucketList = append(bucketList, bucket)
 		}
 	}
 	return bucketList
+}
+
+func (fs *S3) filterbucket(location string, bucketName string, bucketCreationDate time.Time) *util.BucketDTO {
+	if slices.Contains(fs.options.Regions, location) {
+		// Filter by names if there's a filter activated
+		if fs.options.FilterByName != nil && len(fs.options.FilterByName) != 0 && !slices.Contains(fs.options.FilterByName, bucketName) {
+			return nil
+		}
+		return &util.BucketDTO{
+			Name:         bucketName,
+			Region:       location,
+			CreationDate: bucketCreationDate,
+		}
+	}
+	return nil
 }
 
 func (fs *S3) ListObjectsInBucket(regionBucket []*util.BucketDTO, region string, priceList MasterPriceList, wg *sync.WaitGroup, bucketChan chan ([]*util.BucketDTO)) {
@@ -137,7 +144,7 @@ func (fs *S3) FetchBucket(bucket *util.BucketDTO, bucketChan chan (*util.BucketD
 				}
 
 				totalSize += *obj.Size
-				storageClassSize[aws.StringValue(obj.StorageClass)] += (float64(*obj.Size) / (math.Pow(float64(1024), fs.options.OutputOptions.SizeConversion)))
+				storageClassSize[aws.StringValue(obj.StorageClass)] += (float64(*obj.Size))
 
 				fs.totalStorageClassSize.Mutex.Lock()
 				fs.totalStorageClassSize.SizeMap[fs.region][aws.StringValue(obj.StorageClass)] += float64(*obj.Size)
@@ -171,7 +178,7 @@ func (fs *S3) FetchBucket(bucket *util.BucketDTO, bucketChan chan (*util.BucketD
 }
 
 func (fs *S3) SetBucketCost(buckets []*util.BucketDTO, priceList MasterPriceList) {
-	tierListPrice := GetTierPriceList(fs.totalStorageClassSize.SizeMap[fs.region], priceList[fs.region])
+	tierListPrice := GetTierPriceList(fs.totalStorageClassSize.SizeMap[fs.region], priceList[fs.region], fs.options.OutputOptions.SizeConversion)
 	for _, bucket := range buckets {
 		var total float64
 		for k, v := range bucket.StorageClassSize {

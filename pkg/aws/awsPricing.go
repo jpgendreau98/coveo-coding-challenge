@@ -134,13 +134,12 @@ func DecodePricingList(productPrice *pricing.GetProductsOutput) (priceList Price
 	return priceList, nil
 }
 
-func GetTierPriceList(totalStorageClassSize util.StorageClassSizeMap, priceList ProductPriceList) map[string]float64 {
+func GetTierPriceList(totalStorageClassSize util.StorageClassSizeMap, priceList ProductPriceList, conversion float64) map[string]float64 {
 	tierList := make(map[string]float64)
 	for k, v := range totalStorageClassSize {
 		priceListForSku := priceList[GetStorageClassType(k)]
 		//Transform size in GB
-		sizeGB := float64(v) / (1024 * 1024 * 1024)
-		price, err := getPriceForSize(sizeGB, priceListForSku)
+		price, err := getPriceForSize(TransformByteToGB(v, conversion), priceListForSku)
 		if err != nil {
 			fmt.Println(err)
 			continue
@@ -172,7 +171,9 @@ func getPriceForSize(sizeGB float64, priceListForSku PriceList) (price float64, 
 					fmt.Println(err)
 					continue
 				}
-				if (eRange - bRange) > tempSize {
+				if (eRange - bRange) >= tempSize {
+					fmt.Println(eRange - bRange)
+					fmt.Println(tempSize)
 					totalPrice += tempSize * unitPrice
 					break
 				} else {
