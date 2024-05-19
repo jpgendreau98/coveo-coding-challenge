@@ -10,12 +10,11 @@ import (
 
 func OutputData(buckets []*BucketDTO, options OutputOptions) error {
 	output := make(map[string]interface{})
-
 	if options.OrderByInc != "" {
 		buckets = orderByInc(options.OrderByInc, buckets)
 
 	} else if options.OrderByDec != "" {
-		buckets = orderByDec(options.OrderByInc, buckets)
+		buckets = orderByDec(options.OrderByDec, buckets)
 
 	}
 	output["S3"] = buckets
@@ -70,19 +69,16 @@ func orderByDec(key string, data []*BucketDTO) []*BucketDTO {
 	switch key {
 	case "cost":
 		slices.SortStableFunc(data, func(a, b *BucketDTO) int {
-			return cmp.Compare(a.Cost, b.Cost)
+			return (cmp.Compare(a.Cost, b.Cost) * -1)
 		})
-		slices.Reverse(data)
 	case "name":
 		slices.SortStableFunc(data, func(a, b *BucketDTO) int {
-			return cmp.Compare(a.Name, b.Name)
+			return (cmp.Compare(a.Name, b.Name) * -1)
 		})
-		slices.Reverse(data)
 	case "size":
 		slices.SortStableFunc(data, func(a, b *BucketDTO) int {
-			return cmp.Compare(a.SizeOfBucket, b.SizeOfBucket)
+			return (cmp.Compare(a.SizeOfBucket, b.SizeOfBucket) * -1)
 		})
-		slices.Reverse(data)
 	}
 	return data
 }

@@ -24,6 +24,7 @@ type RegionSkuList map[string][]Product
 type MasterPriceList map[string]ProductPriceList
 type ProductPriceList map[string]PriceList
 
+// Establish connections to aws pricing services.
 func InitConnectionPricingList() *AwsPricing {
 	session, _ := session.NewSession(&aws.Config{
 		Region: aws.String("us-east-1"),
@@ -33,6 +34,7 @@ func InitConnectionPricingList() *AwsPricing {
 	}
 }
 
+// Get skus of AmazonS3 storage products
 func (ap *AwsPricing) GetSkusForRegions(regions []string) (RegionSkuList, error) {
 	var regionSkuList = make(RegionSkuList)
 	for _, region := range regions {
@@ -45,47 +47,51 @@ func (ap *AwsPricing) GetSkusForRegions(regions []string) (RegionSkuList, error)
 		if err != nil {
 			return nil, err
 		}
-		pricelist, err := ap.getPriceListWithArn(results.PriceLists)
-		if err != nil {
-			return nil, err
+		var priceslist []Product
+		for _, priceList := range results.PriceLists {
+			productPrices, err := ap.getProductWithArn(priceList.PriceListArn)
+			if err != nil {
+				return nil, err
+			}
+			priceslist = append(priceslist, productPrices...)
 		}
-		regionSkuList[region] = pricelist
+		regionSkuList[region] = priceslist
 	}
 	return regionSkuList, nil
 
 }
 
-func (ap *AwsPricing) getPriceListWithArn(pricelists []*pricing.PriceList) (list []Product, err error) {
-	for _, priceList := range pricelists {
-		results, err := ap.Session.GetPriceListFileUrl(&pricing.GetPriceListFileUrlInput{
-			FileFormat:   aws.String("json"),
-			PriceListArn: priceList.PriceListArn,
-		})
-		if err != nil {
-			return nil, err
-		}
-		resp, err := http.Get(aws.StringValue(results.Url))
-		if err != nil {
-			return nil, err
-		}
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			return nil, err
-		}
-		products := TEST{}
-		err = json.Unmarshal(body, &products)
-		if err != nil {
-			return nil, err
-		}
-		for _, product := range products.Products {
-			if product.ProductFamily == "Storage" && product.Attributes.Operation == "" && product.Attributes.Usagetype != "TagStorage-TagHrs" {
-				list = append(list, product)
-			}
+// Get PriceList of a product with an arn provided by AWS. Returns a list of products.
+func (ap *AwsPricing) getProductWithArn(priceListArn *string) (list []Product, err error) {
+	results, err := ap.Session.GetPriceListFileUrl(&pricing.GetPriceListFileUrlInput{
+		FileFormat:   aws.String("json"),
+		PriceListArn: priceListArn,
+	})
+	if err != nil {
+		return nil, err
+	}
+	resp, err := http.Get(aws.StringValue(results.Url))
+	if err != nil {
+		return nil, err
+	}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	products := TEST{}
+	err = json.Unmarshal(body, &products)
+	if err != nil {
+		return nil, err
+	}
+	for _, product := range products.Products {
+		if product.ProductFamily == "Storage" && product.Attributes.Operation == "" && product.Attributes.Usagetype != "TagStorage-TagHrs" {
+			list = append(list, product)
 		}
 	}
 	return list, nil
 }
 
+// Get Region Price price list with the sku list. Returns an Master price list of all prices in all regions.
 func (ap *AwsPricing) GetRegionPriceList(regionSkuList RegionSkuList) MasterPriceList {
 	regionMasterPriceList := make(MasterPriceList)
 	for k, v := range regionSkuList {
@@ -108,6 +114,7 @@ func (ap *AwsPricing) GetRegionPriceList(regionSkuList RegionSkuList) MasterPric
 	return regionMasterPriceList
 }
 
+// Get a price list with a sku.
 func (ap *AwsPricing) GetPriceListWithSku(sku string) (*pricing.GetProductsOutput, error) {
 	filters := []*pricing.Filter{{
 		Field: aws.String("sku"),
@@ -125,6 +132,7 @@ func (ap *AwsPricing) GetPriceListWithSku(sku string) (*pricing.GetProductsOutpu
 	return productPrice, nil
 }
 
+// Decode a pricing list from AWS.
 func DecodePricingList(productPrice *pricing.GetProductsOutput) (priceList PriceList, err error) {
 	striout, _ := protocol.EncodeJSONValue(productPrice.PriceList[0], protocol.NoEscape)
 	err = json.Unmarshal([]byte(striout), &priceList)
@@ -134,12 +142,12 @@ func DecodePricingList(productPrice *pricing.GetProductsOutput) (priceList Price
 	return priceList, nil
 }
 
+// Calculate the average price for a SKU. It will take the total size of all the storage class and return a map of average price per storage class.
 func GetTierPriceList(totalStorageClassSize util.StorageClassSizeMap, priceList ProductPriceList, conversion float64) map[string]float64 {
 	tierList := make(map[string]float64)
 	for k, v := range totalStorageClassSize {
 		priceListForSku := priceList[GetStorageClassType(k)]
-		//Transform size in GB
-		price, err := getPriceForSize(TransformByteToGB(v, conversion), priceListForSku)
+		price, err := getPriceForSize(TransformSizeToGB(v, conversion), priceListForSku)
 		if err != nil {
 			fmt.Println(err)
 			continue
@@ -150,6 +158,7 @@ func GetTierPriceList(totalStorageClassSize util.StorageClassSizeMap, priceList 
 
 }
 
+// Function to calculate the average price per storage class based on total size of storage class.
 func getPriceForSize(sizeGB float64, priceListForSku PriceList) (price float64, err error) {
 	var totalPrice float64
 	var tempSize = sizeGB
@@ -172,8 +181,6 @@ func getPriceForSize(sizeGB float64, priceListForSku PriceList) (price float64, 
 					continue
 				}
 				if (eRange - bRange) >= tempSize {
-					fmt.Println(eRange - bRange)
-					fmt.Println(tempSize)
 					totalPrice += tempSize * unitPrice
 					break
 				} else {
@@ -188,6 +195,7 @@ func getPriceForSize(sizeGB float64, priceListForSku PriceList) (price float64, 
 	return totalPrice / sizeGB, nil
 }
 
+// Help function to convert between AWS Bucket Storage class and AWS Price liste Storage Class
 func GetStorageClassType(volumeType string) string {
 	switch volumeType {
 	case S3_STORAGE_CLASS_GLACIER_IR:
@@ -202,56 +210,6 @@ func GetStorageClassType(volumeType string) string {
 		return "Reduced Redundancy"
 	case S3_STORAGE_CLASS_STANDARD_IA:
 		return "Standard - Infrequent Access"
-	default:
-		return S3_STORAGE_CLASS_STANDARD
-	}
-}
-
-func GetStorageClassSku(storageClass string) string {
-	switch storageClass {
-	case "STANDARD":
-		return S3_SKU_VOL_STANDARD
-	case "REDUCED_REDUNDANCY":
-		return S3_SKU_VOL_REDUCED_REDUNDANCY
-	case "GLACIER":
-		return S3_SKU_VOL_AMAZON_GLACIER
-	case "STANDARD_IA":
-		return S3_SKU_VOL_STANDARD_INFREQUENT_ACCESS
-	case "ONEZONE_IA":
-		return S3_SKU_VOL_STANDARD
-	case "INTELLIGENT_TIERING":
-		return S3_SKU_VOL_INTELLIGENT_TIERING_FREQUENT_ACCESS
-	case "DEEP_ARCHIVE":
-		return S3_SKU_VOL_GLACIER_DEEP_ARCHIVE
-	case "OUTPOSTS":
-		return S3_SKU_VOL_STANDARD
-	case "GLACIER_IR":
-		return S3_SKU_VOL_GLACIER_INSTANT_RETRIEVAL
-	case "SNOW":
-		return S3_SKU_VOL_STANDARD
-	case "EXPRESS_ONEZONE":
-		return S3_SKU_VOL_STANDARD
-	default:
-		return S3_SKU_VOL_STANDARD
-	}
-}
-
-func GetStorageClassNameBySky(sku string) string {
-	switch sku {
-	case S3_SKU_VOL_STANDARD:
-		return S3_STORAGE_CLASS_STANDARD
-	case S3_SKU_VOL_REDUCED_REDUNDANCY:
-		return S3_STORAGE_CLASS_REDUCED_REDUNDANCY
-	case S3_SKU_VOL_AMAZON_GLACIER:
-		return S3_STORAGE_CLASS_GLACIER
-	case S3_SKU_VOL_STANDARD_INFREQUENT_ACCESS:
-		return S3_STORAGE_CLASS_STANDARD_IA
-	case S3_SKU_VOL_INTELLIGENT_TIERING_FREQUENT_ACCESS:
-		return S3_STORAGE_CLASS_INTELLIGENT_TIERING
-	case S3_SKU_VOL_GLACIER_DEEP_ARCHIVE:
-		return S3_STORAGE_CLASS_DEEP_ARCHIVE
-	case S3_SKU_VOL_GLACIER_INSTANT_RETRIEVAL:
-		return S3_STORAGE_CLASS_GLACIER_IR
 	default:
 		return S3_STORAGE_CLASS_STANDARD
 	}

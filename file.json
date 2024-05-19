@@ -2,13 +2,15 @@
     "S3": {
         "ca-central-1": [
             {
-                "Name": "coveo12345-poc-3",
-                "CreationDate": "2024-05-18T15:32:14Z",
-                "NbOfFiles": 0,
-                "SizeOfBucket": 0,
-                "LastUpdateDate": "0001-01-01T00:00:00Z",
-                "Cost": 0,
-                "StorageClassSize": {},
+                "Name": "coveo12345-poc-2",
+                "CreationDate": "2024-05-18T15:32:07Z",
+                "NbOfFiles": 100,
+                "SizeOfBucket": 628000,
+                "LastUpdateDate": "2024-05-19T11:42:07-04:00",
+                "Cost": 0.000014036893966618004,
+                "StorageClassSize": {
+                    "STANDARD": 628000
+                },
                 "Region": "ca-central-1"
             },
             {
@@ -22,42 +24,6 @@
                     "STANDARD": 489840
                 },
                 "Region": "ca-central-1"
-            },
-            {
-                "Name": "coveo12345-poc-2",
-                "CreationDate": "2024-05-18T15:32:07Z",
-                "NbOfFiles": 100,
-                "SizeOfBucket": 628000,
-                "LastUpdateDate": "2024-05-19T11:42:07-04:00",
-                "Cost": 0.000014036893966618004,
-                "StorageClassSize": {
-                    "STANDARD": 628000
-                },
-                "Region": "ca-central-1"
-            }
-        ],
-        "us-east-1": [
-            {
-                "Name": "coveo12345-poc-useast",
-                "CreationDate": "2024-05-19T00:21:25Z",
-                "NbOfFiles": 0,
-                "SizeOfBucket": 0,
-                "LastUpdateDate": "0001-01-01T00:00:00Z",
-                "Cost": 0,
-                "StorageClassSize": {},
-                "Region": "us-east-1"
-            }
-        ],
-        "us-west-1": [
-            {
-                "Name": "coveo12345-poc-usweast",
-                "CreationDate": "2024-05-19T01:03:17Z",
-                "NbOfFiles": 0,
-                "SizeOfBucket": 0,
-                "LastUpdateDate": "0001-01-01T00:00:00Z",
-                "Cost": 0,
-                "StorageClassSize": {},
-                "Region": "us-west-1"
             }
         ]
     }

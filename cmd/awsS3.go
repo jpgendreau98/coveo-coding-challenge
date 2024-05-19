@@ -22,9 +22,9 @@ const (
 	GROUP_BY_DESCRIPTION = "Supported: [region]"
 	GROUP_BY_DEFAULT     = ""
 
-	RETURNS_EMTPY             = "return-emtpy-buckets"
+	RETURNS_EMTPY             = "omit-empty"
 	RETURNS_EMTPY_DESCRIPTION = "Omit empty buckets"
-	RETURNS_EMTPY_DEFAULT     = true
+	RETURNS_EMTPY_DEFAULT     = false
 
 	RATE_LIMIT             = "ratelimit"
 	RATE_LIMIT_DESCRIPTION = "Choose the rate limit on the S3 services (Max Get = 5500 per second)"
@@ -58,7 +58,7 @@ func NewS3Command() *cobra.Command {
 			options := &util.CliOptions{
 				Regions:              viper.GetStringSlice(BUCKET_REGIONS),
 				FilterByName:         viper.GetStringSlice(FILTER_BY_NAME),
-				ReturnEmptyBuckets:   viper.GetBool(RETURNS_EMTPY),
+				OmitEmpty:            viper.GetBool(RETURNS_EMTPY),
 				FilterByStorageClass: viper.GetStringSlice(FILTER_BY_STORAGE_CLASS),
 				RateLimit:            viper.GetInt(RATE_LIMIT),
 				Threading:            viper.GetInt(THREADING),

@@ -5,6 +5,24 @@ import (
 	"time"
 )
 
+type CliOptions struct {
+	FilterByName         []string
+	FilterByStorageClass []string
+	OmitEmpty            bool
+	Regions              []string
+	OutputOptions        *OutputOptions
+	RateLimit            int
+	Threading            int
+}
+
+type OutputOptions struct {
+	GroupBy        string
+	OrderByDec     string
+	OrderByInc     string
+	FileOutput     string
+	SizeConversion float64
+}
+
 type BucketDTO struct {
 	Name             string
 	CreationDate     time.Time

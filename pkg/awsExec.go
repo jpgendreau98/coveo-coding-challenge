@@ -31,11 +31,12 @@ func RunS3Command(options *util.CliOptions) error {
 	if err != nil {
 		fmt.Println(err)
 	}
-	// Filter buckets with the filter given by user
+	// Filter buckets with the filter given by user (Filter by name and Filter by region)
 	buckets := fs.GetBucketsFiltered()
-	// We have to sort the liste of buckets for increase performance for search functions
+	// We have to sort the list of buckets for increase performance for search functions
 	aws.SortListBasedOnRegion(buckets)
-	//Since all the region
+	//Since the sdk of Go doesn't let you scrap a bucket which is not in the region of the config,
+	//we have to loop on all the wanted regions to be able to scrap all the buckets.
 	bucketChan := make(chan []*util.BucketDTO, len(buckets))
 	wg := new(sync.WaitGroup)
 	for _, region := range options.Regions {
@@ -47,7 +48,7 @@ func RunS3Command(options *util.CliOptions) error {
 			continue
 		}
 		//Return all the bucket in the region
-		regionBucket := aws.GetBucketOfTheRegion(buckets, region)
+		regionBucket := aws.GetBucketsOfRegion(buckets, region)
 		//Using the sorted lists from earlier, the search is way faster to find the index of the buckets
 		buckets = aws.RemoveScrappedBucketFromList(regionBucket, buckets)
 		//Starting multi-threading on the scrap of objects.
@@ -63,6 +64,7 @@ func RunS3Command(options *util.CliOptions) error {
 	fs.SetBucketCost(allBuckets, priceList)
 	fmt.Println("Buckets have been fetched successfuly!")
 	fmt.Println("Printing data...")
+	//Print Data
 	util.OutputData(allBuckets, *options.OutputOptions)
 	return nil
 }
@@ -78,11 +80,14 @@ func initRegionStorageMap(regions []string) *util.StorageClassSize {
 }
 
 func fetchPrices(options util.CliOptions) (aws.MasterPriceList, error) {
+	//Init connection to AWS pricing services
 	svc := aws.InitConnectionPricingList()
+	//Get a list with all the skus for Amazon S3 product grouped by region
 	regionSkuList, err := svc.GetSkusForRegions(options.Regions)
 	if err != nil {
 		return nil, err
 	}
+	//Create a price list with all the different prices for the wanted regions
 	masterPriceList := svc.GetRegionPriceList(regionSkuList)
 	return masterPriceList, nil
 }

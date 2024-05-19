@@ -25,7 +25,7 @@ func S3ReturnsEmptyBucket() AwsS3ReturnEmptyBuckets {
 }
 
 func (m AwsS3ReturnEmptyBuckets) View() string {
-	s := "Do you want to display buckets that are empty?\n\n"
+	s := "Do you want to omit buckets that are empty?\n\n"
 
 	// Iterate over our choices
 	for i, choice := range m.choices {
@@ -67,7 +67,7 @@ func (m AwsS3ReturnEmptyBuckets) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "enter":
 			if m.choices[m.cursor] == "yes" {
-				RunCommand.Options.ReturnEmptyBuckets = true
+				RunCommand.Options.OmitEmpty = true
 			}
 			RunCommand.Done = true
 			return m, tea.Quit

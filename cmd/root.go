@@ -32,7 +32,8 @@ func NewGuiCommand() *cobra.Command {
 			if frontend.RunCommand.Done {
 				switch frontend.RunCommand.Command {
 				case "AWSS3":
-					fmt.Println(frontend.RunCommand.Options)
+					frontend.RunCommand.Options.RateLimit = 5000
+					frontend.RunCommand.Options.Threading = 400
 					err := pkg.RunS3Command(frontend.RunCommand.Options)
 					if err != nil {
 						return err

@@ -11,7 +11,7 @@ MVP:
 - threading throttle DONE
 - api throttle DONE
 - Output data with flags DONE
-- Test A FAIRE
+- Test Done
 - Affichage 
   - Possibilité de sortir les résultats en octets, kilooctets, Mégaoctets, etc. DONE
   - Pouvoir grouper les buckets par [régions](https://docs.aws.amazon.com/fr_fr/AWSEC2/latest/UserGuide/using-regions-availability-zones.html) DONE

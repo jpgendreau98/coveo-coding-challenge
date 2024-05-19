@@ -50,7 +50,7 @@ func TestSortListBasedOnRegion(t *testing.T) {
 
 }
 
-func TestGetBucketOfTheRegion(t *testing.T) {
+func TestGetBucketsOfRegion(t *testing.T) {
 	var expectedInput = []*util.BucketDTO{
 		{
 			Name:   "One",
@@ -77,7 +77,7 @@ func TestGetBucketOfTheRegion(t *testing.T) {
 		},
 	}
 	region := "us-east-2"
-	output := GetBucketOfTheRegion(expectedInput, region)
+	output := GetBucketsOfRegion(expectedInput, region)
 	assert.Equal(t, expectedOutput, output)
 }
 
