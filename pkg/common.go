@@ -10,6 +10,9 @@ type CliOptions struct {
 	FilterByStorageClass []string
 	ReturnEmptyBuckets   bool
 	Regions              []string
+	OrderByINC           string
+	OrderByDEC           string
+	GroupByRegion        bool
 }
 
 func TransformByteToGB(size int64) float64 {
