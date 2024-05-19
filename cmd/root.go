@@ -14,6 +14,7 @@ func NewRootCommand() *cobra.Command {
 	}
 	cmd.AddCommand(
 		NewGuiCommand(),
+		NewS3Command(),
 	)
 	return cmd
 }

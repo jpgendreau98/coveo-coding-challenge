@@ -53,9 +53,10 @@ func (fs *S3) ListDirectories(options CliOptions) (bucketList []*BucketDTO) {
 		location := fs.GetBucketLocation(bucket)
 		if slices.Contains(options.Regions, location) {
 			// Filter by names if there's a filter activated
-			if options.FilterByName != nil && !slices.Contains(options.FilterByName, aws.StringValue(bucket.Name)) {
+			if options.FilterByName != nil && len(options.FilterByName) != 0 && !slices.Contains(options.FilterByName, aws.StringValue(bucket.Name)) {
 				continue
 			}
+
 			bucketList = append(bucketList, &BucketDTO{
 				Name:         aws.StringValue(bucket.Name),
 				Region:       location,

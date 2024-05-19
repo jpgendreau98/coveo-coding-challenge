@@ -12,7 +12,7 @@ type CliOptions struct {
 	Regions              []string
 	OrderByINC           string
 	OrderByDEC           string
-	GroupByRegion        bool
+	GroupBy              string
 }
 
 func TransformByteToGB(size int64) float64 {

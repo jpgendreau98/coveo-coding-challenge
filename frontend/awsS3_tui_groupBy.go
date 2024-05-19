@@ -71,7 +71,7 @@ func (m AwsS3GroupBy) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "enter":
 			if m.choices[m.cursor] == "region" {
-				RunCommand.Options.GroupByRegion = true
+				RunCommand.Options.GroupBy = "region"
 			}
 			return S3OrderBy().Update(nil)
 		}
