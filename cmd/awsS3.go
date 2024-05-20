@@ -1,10 +1,10 @@
 package cmd
 
 import (
-	"fmt"
 	"projet-devops-coveo/pkg"
 	"projet-devops-coveo/pkg/util"
 
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -90,7 +90,7 @@ func NewS3Command() *cobra.Command {
 	cmd.Flags().StringSlice(FILTER_BY_STORAGE_CLASS, nil, FILTER_BY_STORAGE_CLASS_DESCRIPTION)
 	err := viper.BindPFlags(cmd.Flags())
 	if err != nil {
-		fmt.Println(err)
+		logrus.Error(err)
 		return nil
 	}
 

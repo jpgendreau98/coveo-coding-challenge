@@ -8,43 +8,43 @@ import (
 
 func TestGroupByRegion(t *testing.T) {
 	tests := []struct {
-		input  []*BucketDTO
-		output map[string][]*BucketDTO
+		input  []CloudFilesystem
+		output map[string][]CloudFilesystem
 	}{
 		{
-			input: []*BucketDTO{
-				{
+			input: []CloudFilesystem{
+				&BucketDTO{
 					Name:   "test1",
 					Region: "ca-central-1",
-				}, {
+				}, &BucketDTO{
 					Name:   "test2",
 					Region: "ca-central-1",
-				}, {
+				}, &BucketDTO{
 					Name:   "test3",
 					Region: "us-east-1",
-				}, {
+				}, &BucketDTO{
 					Name:   "test4",
 					Region: "us-west-2",
 				},
 			},
-			output: map[string][]*BucketDTO{
+			output: map[string][]CloudFilesystem{
 				"ca-central-1": {
-					{
+					&BucketDTO{
 						Name:   "test1",
 						Region: "ca-central-1",
-					}, {
+					}, &BucketDTO{
 						Name:   "test2",
 						Region: "ca-central-1",
 					},
 				},
 				"us-east-1": {
-					{
+					&BucketDTO{
 						Name:   "test3",
 						Region: "us-east-1",
 					},
 				},
 				"us-west-2": {
-					{
+					&BucketDTO{
 						Name:   "test4",
 						Region: "us-west-2",
 					},
@@ -53,29 +53,31 @@ func TestGroupByRegion(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		output := groupByRegion(test.input)
+		output := applyOutputOptions(test.input, OutputOptions{
+			GroupBy: "region",
+		})
 		assert.Equal(t, test.output, output)
 	}
 }
 
 func TestOrderByInc(t *testing.T) {
-	input := []*BucketDTO{
-		{
+	input := []CloudFilesystem{
+		&BucketDTO{
 			Name:         "test1",
 			Region:       "ca-central-1",
 			SizeOfBucket: 934,
 			Cost:         123,
-		}, {
+		}, &BucketDTO{
 			Name:         "test2",
 			Region:       "ca-central-1",
 			SizeOfBucket: 437589374,
 			Cost:         1234,
-		}, {
+		}, &BucketDTO{
 			Name:         "test3",
 			Region:       "us-east-1",
 			SizeOfBucket: 84834,
 			Cost:         12345,
-		}, {
+		}, &BucketDTO{
 			Name:         "test4",
 			Region:       "us-west-2",
 			SizeOfBucket: 934223,
@@ -83,29 +85,29 @@ func TestOrderByInc(t *testing.T) {
 		},
 	}
 	tests := []struct {
-		input  []*BucketDTO
-		output []*BucketDTO
+		input  []CloudFilesystem
+		output []CloudFilesystem
 		key    string
 	}{
 		{
 			input: input,
-			output: []*BucketDTO{
-				{
+			output: []CloudFilesystem{
+				&BucketDTO{
 					Name:         "test1",
 					Region:       "ca-central-1",
 					SizeOfBucket: 934,
 					Cost:         123,
-				}, {
+				}, &BucketDTO{
 					Name:         "test2",
 					Region:       "ca-central-1",
 					SizeOfBucket: 437589374,
 					Cost:         1234,
-				}, {
+				}, &BucketDTO{
 					Name:         "test3",
 					Region:       "us-east-1",
 					SizeOfBucket: 84834,
 					Cost:         12345,
-				}, {
+				}, &BucketDTO{
 					Name:         "test4",
 					Region:       "us-west-2",
 					SizeOfBucket: 934223,
@@ -116,23 +118,23 @@ func TestOrderByInc(t *testing.T) {
 		},
 		{
 			input: input,
-			output: []*BucketDTO{
-				{
+			output: []CloudFilesystem{
+				&BucketDTO{
 					Name:         "test1",
 					Region:       "ca-central-1",
 					SizeOfBucket: 934,
 					Cost:         123,
-				}, {
+				}, &BucketDTO{
 					Name:         "test3",
 					Region:       "us-east-1",
 					SizeOfBucket: 84834,
 					Cost:         12345,
-				}, {
+				}, &BucketDTO{
 					Name:         "test4",
 					Region:       "us-west-2",
 					SizeOfBucket: 934223,
 					Cost:         123456,
-				}, {
+				}, &BucketDTO{
 					Name:         "test2",
 					Region:       "ca-central-1",
 					SizeOfBucket: 437589374,
@@ -143,23 +145,23 @@ func TestOrderByInc(t *testing.T) {
 		},
 		{
 			input: input,
-			output: []*BucketDTO{
-				{
+			output: []CloudFilesystem{
+				&BucketDTO{
 					Name:         "test1",
 					Region:       "ca-central-1",
 					SizeOfBucket: 934,
 					Cost:         123,
-				}, {
+				}, &BucketDTO{
 					Name:         "test2",
 					Region:       "ca-central-1",
 					SizeOfBucket: 437589374,
 					Cost:         1234,
-				}, {
+				}, &BucketDTO{
 					Name:         "test3",
 					Region:       "us-east-1",
 					SizeOfBucket: 84834,
 					Cost:         12345,
-				}, {
+				}, &BucketDTO{
 					Name:         "test4",
 					Region:       "us-west-2",
 					SizeOfBucket: 934223,
@@ -176,23 +178,23 @@ func TestOrderByInc(t *testing.T) {
 }
 
 func TestOrderByDec(t *testing.T) {
-	input := []*BucketDTO{
-		{
+	input := []CloudFilesystem{
+		&BucketDTO{
 			Name:         "test1",
 			Region:       "ca-central-1",
 			SizeOfBucket: 934,
 			Cost:         123,
-		}, {
+		}, &BucketDTO{
 			Name:         "test2",
 			Region:       "ca-central-1",
 			SizeOfBucket: 437589374,
 			Cost:         1234,
-		}, {
+		}, &BucketDTO{
 			Name:         "test3",
 			Region:       "us-east-1",
 			SizeOfBucket: 84834,
 			Cost:         12345,
-		}, {
+		}, &BucketDTO{
 			Name:         "test4",
 			Region:       "us-west-2",
 			SizeOfBucket: 934223,
@@ -200,29 +202,29 @@ func TestOrderByDec(t *testing.T) {
 		},
 	}
 	tests := []struct {
-		input  []*BucketDTO
-		output []*BucketDTO
+		input  []CloudFilesystem
+		output []CloudFilesystem
 		key    string
 	}{
 		{
 			input: input,
-			output: []*BucketDTO{
-				{
+			output: []CloudFilesystem{
+				&BucketDTO{
 					Name:         "test4",
 					Region:       "us-west-2",
 					SizeOfBucket: 934223,
 					Cost:         123456,
-				}, {
+				}, &BucketDTO{
 					Name:         "test3",
 					Region:       "us-east-1",
 					SizeOfBucket: 84834,
 					Cost:         12345,
-				}, {
+				}, &BucketDTO{
 					Name:         "test2",
 					Region:       "ca-central-1",
 					SizeOfBucket: 437589374,
 					Cost:         1234,
-				}, {
+				}, &BucketDTO{
 					Name:         "test1",
 					Region:       "ca-central-1",
 					SizeOfBucket: 934,
@@ -233,23 +235,23 @@ func TestOrderByDec(t *testing.T) {
 		},
 		{
 			input: input,
-			output: []*BucketDTO{
-				{
+			output: []CloudFilesystem{
+				&BucketDTO{
 					Name:         "test2",
 					Region:       "ca-central-1",
 					SizeOfBucket: 437589374,
 					Cost:         1234,
-				}, {
+				}, &BucketDTO{
 					Name:         "test4",
 					Region:       "us-west-2",
 					SizeOfBucket: 934223,
 					Cost:         123456,
-				}, {
+				}, &BucketDTO{
 					Name:         "test3",
 					Region:       "us-east-1",
 					SizeOfBucket: 84834,
 					Cost:         12345,
-				}, {
+				}, &BucketDTO{
 					Name:         "test1",
 					Region:       "ca-central-1",
 					SizeOfBucket: 934,
@@ -260,23 +262,23 @@ func TestOrderByDec(t *testing.T) {
 		},
 		{
 			input: input,
-			output: []*BucketDTO{
-				{
+			output: []CloudFilesystem{
+				&BucketDTO{
 					Name:         "test4",
 					Region:       "us-west-2",
 					SizeOfBucket: 934223,
 					Cost:         123456,
-				}, {
+				}, &BucketDTO{
 					Name:         "test3",
 					Region:       "us-east-1",
 					SizeOfBucket: 84834,
 					Cost:         12345,
-				}, {
+				}, &BucketDTO{
 					Name:         "test2",
 					Region:       "ca-central-1",
 					SizeOfBucket: 437589374,
 					Cost:         1234,
-				}, {
+				}, &BucketDTO{
 					Name:         "test1",
 					Region:       "ca-central-1",
 					SizeOfBucket: 934,

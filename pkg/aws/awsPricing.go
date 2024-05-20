@@ -2,7 +2,6 @@ package aws
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -13,10 +12,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/pricing"
 	"github.com/aws/aws-sdk-go-v2/service/pricing/types"
+	"github.com/sirupsen/logrus"
 )
 
 type AwsPricing struct {
-	Session *AwsClient
+	Session AwsInterface
 }
 
 type RegionSkuList map[string][]Product
@@ -24,7 +24,7 @@ type MasterPriceList map[string]ProductPriceList
 type ProductPriceList map[string]PriceList
 
 // Establish connections to aws pricing services.
-func InitConnectionPricingList(awsClient *AwsClient) *AwsPricing {
+func InitConnectionPricingList(awsClient AwsInterface) *AwsPricing {
 	return &AwsPricing{
 		Session: awsClient,
 	}
@@ -95,12 +95,12 @@ func (ap *AwsPricing) GetRegionPriceList(regionSkuList RegionSkuList) MasterPric
 		for _, product := range v {
 			productPrice, err := ap.GetPriceListWithSku(product.Sku)
 			if err != nil {
-				fmt.Println(err)
+				logrus.Error(err)
 				continue
 			}
 			priceList, err := DecodePricingList(productPrice)
 			if err != nil {
-				fmt.Println(err)
+				logrus.Error(err)
 				continue
 			}
 			productPriceList[product.Attributes.VolumeType] = priceList
@@ -144,7 +144,7 @@ func GetTierPriceList(totalStorageClassSize util.StorageClassSizeMap, priceList 
 		priceListForSku := priceList[GetStorageClassType(k)]
 		price, err := getPriceForSize(TransformSizeToGB(v), priceListForSku)
 		if err != nil {
-			fmt.Println(err)
+			logrus.Error(err)
 			continue
 		}
 		tierList[k] = price
@@ -161,18 +161,18 @@ func getPriceForSize(sizeGB float64, priceListForSku PriceList) (price float64, 
 		for _, l := range j.PriceDimensions {
 			bRange, err := strconv.ParseFloat(l.BeginRange, 64)
 			if err != nil {
-				fmt.Println(err)
+				logrus.Error(err)
 				continue
 			}
 			unitPrice, err := strconv.ParseFloat(l.PricePerUnit.Usd, 32)
 			if err != nil {
-				fmt.Println(err)
+				logrus.Error(err)
 				continue
 			}
 			if l.EndRange != "Inf" {
 				eRange, err := strconv.ParseFloat(l.EndRange, 64)
 				if err != nil {
-					fmt.Println(err)
+					logrus.Error(err)
 					continue
 				}
 				if (eRange - bRange) >= tempSize {

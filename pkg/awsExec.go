@@ -1,12 +1,13 @@
 package pkg
 
 import (
-	"fmt"
 	"sync"
+	"time"
 
 	"projet-devops-coveo/pkg/aws"
 	"projet-devops-coveo/pkg/util"
 
+	"github.com/sirupsen/logrus"
 	"go.uber.org/ratelimit"
 )
 
@@ -15,22 +16,22 @@ func RunS3Command(options *util.CliOptions) error {
 	limiter := ratelimit.New(options.RateLimit)
 	awsClient, err := aws.NewAwsClient(options.Regions[0], limiter)
 	//Fetching the price of the day.
-	fmt.Println("Fetching prices as of today...")
+	logrus.Info("Fetching prices as of today...")
 	priceList, err := fetchPrices(awsClient, *options)
 	if err != nil {
-		fmt.Println(err)
+		logrus.Error(err)
 	}
-	fmt.Println("Price fetched Successfully!")
+	logrus.Info("Price fetched Successfully!")
 
-	fmt.Println("Starting the scrapping of S3 Buckets")
-
+	logrus.Info("Starting the scrapping of S3 Buckets")
+	start := time.Now()
 	// Init GlobalStorageMap to use it on all s3 regions
 	globalStorageClassSize := initRegionStorageMap(options.Regions)
-	var allBuckets []*util.BucketDTO
+	var allBuckets []util.CloudFilesystem
 	// Create initial connection for scrapping of all the buckets since this call is regionless
 	fs, err := aws.InitConnection(options.Regions[0], *options, globalStorageClassSize, limiter)
 	if err != nil {
-		fmt.Println(err)
+		logrus.Error(err)
 	}
 	// Filter buckets with the filter given by user (Filter by name and Filter by region)
 	buckets := fs.GetBucketsFiltered()
@@ -38,14 +39,14 @@ func RunS3Command(options *util.CliOptions) error {
 	aws.SortListBasedOnRegion(buckets)
 	//Since the sdk of Go doesn't let you scrap a bucket which is not in the region of the config,
 	//we have to loop on all the wanted regions to be able to scrap all the buckets.
-	bucketChan := make(chan []*util.BucketDTO, len(buckets))
+	bucketChan := make(chan []util.CloudFilesystem, len(buckets))
 	wg := new(sync.WaitGroup)
 	for _, region := range options.Regions {
 		wg.Add(1)
 		//Init a new connection with the region
 		fs, err := aws.InitConnection(region, *options, globalStorageClassSize, limiter)
 		if err != nil {
-			fmt.Println(err)
+			logrus.Error(err)
 			continue
 		}
 		//Return all the bucket in the region
@@ -63,10 +64,12 @@ func RunS3Command(options *util.CliOptions) error {
 	}
 	// Set Bucket cost with all the information gathered.
 	fs.SetBucketCost(allBuckets, priceList)
-	fmt.Println("Buckets have been fetched successfuly!")
-	fmt.Println("Printing data...")
+	logrus.Info("Buckets have been fetched successfuly!")
+	logrus.Info("Execution Time: ", time.Since(start))
+	logrus.Info("Printing data...")
 	//Print Data
-	util.OutputData(allBuckets, *options.OutputOptions)
+	util.OutputData(allBuckets, *options.OutputOptions, globalStorageClassSize.SizeMap)
+	logrus.Info("Done!")
 	return nil
 }
 
@@ -80,7 +83,7 @@ func initRegionStorageMap(regions []string) *util.StorageClassSize {
 	return globalStorageClassSize
 }
 
-func fetchPrices(awsClient *aws.AwsClient, options util.CliOptions) (aws.MasterPriceList, error) {
+func fetchPrices(awsClient aws.AwsInterface, options util.CliOptions) (aws.MasterPriceList, error) {
 	//Init connection to AWS pricing services
 	svc := aws.InitConnectionPricingList(awsClient)
 	//Get a list with all the skus for Amazon S3 product grouped by region

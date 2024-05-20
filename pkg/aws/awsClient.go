@@ -3,13 +3,24 @@ package aws
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/pricing"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"go.uber.org/ratelimit"
 )
 
-type AwsInterface interface{}
+type AwsInterface interface {
+	ListBuckets(input *s3.ListBucketsInput, optFns ...func(*s3.Options)) (*s3.ListBucketsOutput, error)
+	GetBucketLocation(params *s3.GetBucketLocationInput, optFns ...func(*s3.Options)) (string, error)
+	ListObjectsV2(params *s3.ListObjectsV2Input, optFns ...func(*s3.Options)) (*s3.ListObjectsV2Output, error)
+	ListPriceLists(params *pricing.ListPriceListsInput, optFns ...func(*pricing.Options)) (*pricing.ListPriceListsOutput, error)
+	GetPriceListFileUrl(params *pricing.GetPriceListFileUrlInput, optFns ...func(*pricing.Options)) (*pricing.GetPriceListFileUrlOutput, error)
+	GetProducts(params *pricing.GetProductsInput, optFns ...func(*pricing.Options)) (*pricing.GetProductsOutput, error)
+	NewListObjectsV2Paginator(bucketName string) *s3.ListObjectsV2Paginator
+	NextPage(paginator *s3.ListObjectsV2Paginator) (*s3.ListObjectsV2Output, error)
+	HasMorePages(paginator *s3.ListObjectsV2Paginator) bool
+}
 
 type AwsClient struct {
 	s3      *s3.Client
@@ -18,7 +29,7 @@ type AwsClient struct {
 	ctx     context.Context
 }
 
-func NewAwsClient(region string, limiter ratelimit.Limiter) (*AwsClient, error) {
+func NewAwsClient(region string, limiter ratelimit.Limiter) (AwsInterface, error) {
 	cfg, err := config.LoadDefaultConfig(context.Background())
 	if err != nil {
 		panic("configuration error, " + err.Error())
@@ -69,4 +80,20 @@ func (a *AwsClient) GetPriceListFileUrl(params *pricing.GetPriceListFileUrlInput
 func (a *AwsClient) GetProducts(params *pricing.GetProductsInput, optFns ...func(*pricing.Options)) (*pricing.GetProductsOutput, error) {
 	a.limiter.Take()
 	return a.pricing.GetProducts(a.ctx, params, optFns...)
+}
+
+func (a *AwsClient) NewListObjectsV2Paginator(bucketName string) *s3.ListObjectsV2Paginator {
+	a.limiter.Take()
+	return s3.NewListObjectsV2Paginator(a.s3, &s3.ListObjectsV2Input{
+		Bucket: aws.String(bucketName),
+	})
+}
+
+func (a *AwsClient) NextPage(paginator *s3.ListObjectsV2Paginator) (*s3.ListObjectsV2Output, error) {
+	a.limiter.Take()
+	return paginator.NextPage(a.ctx)
+}
+
+func (a *AwsClient) HasMorePages(paginator *s3.ListObjectsV2Paginator) bool {
+	return paginator.HasMorePages()
 }

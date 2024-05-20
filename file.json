@@ -2,12 +2,24 @@
     "S3": {
         "ca-central-1": [
             {
+                "Name": "coveo12345-poc-3",
+                "CreationDate": "2024-05-18T15:32:14Z",
+                "NbOfFiles": 100,
+                "SizeOfBucket": 0.0005848705768585205,
+                "LastUpdateDate": "2024-05-20T16:15:19-04:00",
+                "Cost": 0.000014621764639344281,
+                "StorageClassSize": {
+                    "STANDARD": 0.0005848705768585205
+                },
+                "Region": "ca-central-1"
+            },
+            {
                 "Name": "coveo12345-poc-2",
                 "CreationDate": "2024-05-18T15:32:07Z",
                 "NbOfFiles": 100,
                 "SizeOfBucket": 0.0005848705768585205,
                 "LastUpdateDate": "2024-05-19T11:42:07-04:00",
-                "Cost": 0.000014621764639344283,
+                "Cost": 0.000014621764639344281,
                 "StorageClassSize": {
                     "STANDARD": 0.0005848705768585205
                 },
@@ -19,20 +31,10 @@
                 "NbOfFiles": 79,
                 "SizeOfBucket": 0.000456199049949646,
                 "LastUpdateDate": "2024-05-18T12:07:07-04:00",
-                "Cost": 0.00001140497641868854,
+                "Cost": 0.000011404976418688538,
                 "StorageClassSize": {
                     "STANDARD": 0.000456199049949646
                 },
-                "Region": "ca-central-1"
-            },
-            {
-                "Name": "coveo12345-poc-3",
-                "CreationDate": "2024-05-18T15:32:14Z",
-                "NbOfFiles": 0,
-                "SizeOfBucket": 0,
-                "LastUpdateDate": "0001-01-01T00:00:00Z",
-                "Cost": 0,
-                "StorageClassSize": {},
                 "Region": "ca-central-1"
             }
         ],
@@ -40,11 +42,13 @@
             {
                 "Name": "coveo12345-poc-useast",
                 "CreationDate": "2024-05-19T00:21:25Z",
-                "NbOfFiles": 0,
-                "SizeOfBucket": 0,
-                "LastUpdateDate": "0001-01-01T00:00:00Z",
-                "Cost": 0,
-                "StorageClassSize": {},
+                "NbOfFiles": 50,
+                "SizeOfBucket": 0.00029243528842926025,
+                "LastUpdateDate": "2024-05-20T16:17:29-04:00",
+                "Cost": 0.000007310882319672141,
+                "StorageClassSize": {
+                    "STANDARD": 0.00029243528842926025
+                },
                 "Region": "us-east-1"
             }
         ],
@@ -60,5 +64,15 @@
                 "Region": "us-west-1"
             }
         ]
+    },
+    "S3-Stats": {
+        "ca-central-1": {
+            "STANDARD": 0.001625940203666687
+        },
+        "us-east-1": {
+            "STANDARD": 0.00029243528842926025
+        },
+        "us-east-2": {},
+        "us-west-1": {}
     }
 }

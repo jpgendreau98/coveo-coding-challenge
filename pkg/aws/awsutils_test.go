@@ -8,39 +8,38 @@ import (
 )
 
 func TestSortListBasedOnRegion(t *testing.T) {
-	var expectedInput = []*util.BucketDTO{
-		{
+	var expectedInput = []util.CloudFilesystem{
+		&util.BucketDTO{
 			Name:   "One",
 			Region: "ca-central-1",
-		}, {
+		}, &util.BucketDTO{
 			Name:   "Two",
 			Region: "us-east-2",
-		}, {
+		}, &util.BucketDTO{
 			Name:   "Three",
 			Region: "us-east-1",
-		}, {
+		}, &util.BucketDTO{
 			Name:   "Four",
 			Region: "us-west-1",
-		},
-		{
+		}, &util.BucketDTO{
 			Name:   "Five",
 			Region: "ch-central-2",
 		},
 	}
-	var expectedOutput = []*util.BucketDTO{
-		{
+	var expectedOutput = []util.CloudFilesystem{
+		&util.BucketDTO{
 			Name:   "One",
 			Region: "ca-central-1",
-		}, {
+		}, &util.BucketDTO{
 			Name:   "Five",
 			Region: "ch-central-2",
-		}, {
+		}, &util.BucketDTO{
 			Name:   "Three",
 			Region: "us-east-1",
-		}, {
+		}, &util.BucketDTO{
 			Name:   "Two",
 			Region: "us-east-2",
-		}, {
+		}, &util.BucketDTO{
 			Name:   "Four",
 			Region: "us-west-1",
 		},
@@ -51,27 +50,26 @@ func TestSortListBasedOnRegion(t *testing.T) {
 }
 
 func TestGetBucketsOfRegion(t *testing.T) {
-	var expectedInput = []*util.BucketDTO{
-		{
+	var expectedInput = []util.CloudFilesystem{
+		&util.BucketDTO{
 			Name:   "One",
 			Region: "ca-central-1",
-		}, {
+		}, &util.BucketDTO{
 			Name:   "Two",
 			Region: "us-east-2",
-		}, {
+		}, &util.BucketDTO{
 			Name:   "Three",
 			Region: "us-east-1",
-		}, {
+		}, &util.BucketDTO{
 			Name:   "Four",
 			Region: "us-west-1",
-		},
-		{
+		}, &util.BucketDTO{
 			Name:   "Five",
 			Region: "ch-central-2",
 		},
 	}
-	var expectedOutput = []*util.BucketDTO{
-		{
+	var expectedOutput = []util.CloudFilesystem{
+		&util.BucketDTO{
 			Name:   "Two",
 			Region: "us-east-2",
 		},
@@ -82,43 +80,42 @@ func TestGetBucketsOfRegion(t *testing.T) {
 }
 
 func TestRemoveScrappedBucketList(t *testing.T) {
-	var expectedInput = []*util.BucketDTO{
-		{
+	var expectedInput = []util.CloudFilesystem{
+		&util.BucketDTO{
 			Name:   "One",
 			Region: "ca-central-1",
-		}, {
+		}, &util.BucketDTO{
 			Name:   "Two",
 			Region: "us-east-2",
-		}, {
+		}, &util.BucketDTO{
 			Name:   "Three",
 			Region: "us-east-1",
-		}, {
+		}, &util.BucketDTO{
 			Name:   "Four",
 			Region: "us-west-1",
-		},
-		{
+		}, &util.BucketDTO{
 			Name:   "Five",
 			Region: "ch-central-2",
 		},
 	}
-	var scappredBucket = []*util.BucketDTO{
-		{
+	var scappredBucket = []util.CloudFilesystem{
+		&util.BucketDTO{
 			Name:   "One",
 			Region: "ca-central-1",
-		}, {
+		}, &util.BucketDTO{
 			Name:   "Three",
 			Region: "us-east-1",
-		}, {
+		}, &util.BucketDTO{
 			Name:   "Four",
 			Region: "us-west-1",
 		},
 	}
-	var expectedoutput = []*util.BucketDTO{
-		{
+	var expectedoutput = []util.CloudFilesystem{
+		&util.BucketDTO{
 			Name:   "Two",
 			Region: "us-east-2",
 		},
-		{
+		&util.BucketDTO{
 			Name:   "Five",
 			Region: "ch-central-2",
 		},

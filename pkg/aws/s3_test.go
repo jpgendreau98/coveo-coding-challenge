@@ -13,7 +13,7 @@ var timeMock = time.Now()
 func TestFilterbucket(t *testing.T) {
 	tests := []struct {
 		name               string
-		expectedOutput     *util.BucketDTO
+		expectedOutput     util.CloudFilesystem
 		filterByName       []string
 		regions            []string
 		bucketLocation     string
@@ -80,14 +80,14 @@ func TestFilterbucket(t *testing.T) {
 func TestSetBucketCost(t *testing.T) {
 	tests := []struct {
 		name           string
-		buckets        []*util.BucketDTO
+		buckets        []util.CloudFilesystem
 		priceList      MasterPriceList
-		expectedOutput []*util.BucketDTO
+		expectedOutput []util.CloudFilesystem
 	}{
 		{
 			name: "Small test",
-			buckets: []*util.BucketDTO{
-				{
+			buckets: []util.CloudFilesystem{
+				&util.BucketDTO{
 					Name:         "Poc-1",
 					SizeOfBucket: float64(50000000),
 					StorageClassSize: util.StorageClassSizeMap{
@@ -99,8 +99,8 @@ func TestSetBucketCost(t *testing.T) {
 			priceList: MasterPriceList{
 				"ca-central-1": MockProductPriceList,
 			},
-			expectedOutput: []*util.BucketDTO{
-				{
+			expectedOutput: []util.CloudFilesystem{
+				&util.BucketDTO{
 					Name:         "Poc-1",
 					SizeOfBucket: float64(50000000),
 					StorageClassSize: util.StorageClassSizeMap{
@@ -113,8 +113,8 @@ func TestSetBucketCost(t *testing.T) {
 		},
 		{
 			name: "2 buckets test",
-			buckets: []*util.BucketDTO{
-				{
+			buckets: []util.CloudFilesystem{
+				&util.BucketDTO{
 					Name:         "Poc-1",
 					SizeOfBucket: float64(50000000),
 					StorageClassSize: util.StorageClassSizeMap{
@@ -122,7 +122,7 @@ func TestSetBucketCost(t *testing.T) {
 					},
 					Region: "ca-central-1",
 				},
-				{
+				&util.BucketDTO{
 					Name:         "Poc-2",
 					SizeOfBucket: float64(5000033),
 					StorageClassSize: util.StorageClassSizeMap{
@@ -134,8 +134,8 @@ func TestSetBucketCost(t *testing.T) {
 			priceList: MasterPriceList{
 				"ca-central-1": MockProductPriceList,
 			},
-			expectedOutput: []*util.BucketDTO{
-				{
+			expectedOutput: []util.CloudFilesystem{
+				&util.BucketDTO{
 					Name:         "Poc-1",
 					SizeOfBucket: float64(50000000),
 					StorageClassSize: util.StorageClassSizeMap{
@@ -144,7 +144,7 @@ func TestSetBucketCost(t *testing.T) {
 					Region: "ca-central-1",
 					Cost:   0.011641532182693481,
 				},
-				{
+				&util.BucketDTO{
 					Name:         "Poc-2",
 					SizeOfBucket: float64(5000033),
 					StorageClassSize: util.StorageClassSizeMap{

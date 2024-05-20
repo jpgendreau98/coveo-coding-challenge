@@ -4,12 +4,11 @@ import (
 	"cmp"
 	"encoding/json"
 	"fmt"
-	"math"
 	"os"
 	"slices"
 )
 
-func OutputData(buckets []*BucketDTO, options OutputOptions) error {
+func OutputData(buckets []CloudFilesystem, options OutputOptions, gloablStorageClass RegionsStorageMap) error {
 	output := make(map[string]interface{})
 	if options.OrderByInc != "" {
 		buckets = orderByInc(options.OrderByInc, buckets)
@@ -20,6 +19,8 @@ func OutputData(buckets []*BucketDTO, options OutputOptions) error {
 	}
 	output["S3"] = buckets
 	output["S3"] = applyOutputOptions(buckets, options)
+	gloablStorageClass.ApplyConversion(options.SizeConversion)
+	output["S3-Stats"] = gloablStorageClass
 	data, err := json.MarshalIndent(output, "", "    ")
 	if err != nil {
 		return err
@@ -35,62 +36,56 @@ func OutputData(buckets []*BucketDTO, options OutputOptions) error {
 	return nil
 }
 
-func applyOutputOptions(data []*BucketDTO, outputOptions OutputOptions) map[string][]*BucketDTO {
+func applyOutputOptions(data []CloudFilesystem, outputOptions OutputOptions) map[string][]CloudFilesystem {
 	applyConversion := outputOptions.SizeConversion > 0
 	applyGroupByRegion := outputOptions.GroupBy == "region"
-	output := make(map[string][]*BucketDTO)
-	for _, bucket := range data {
-		if applyConversion {
-			bucket = applySizeConversion(bucket, outputOptions.SizeConversion)
-		}
-		if applyGroupByRegion {
-			output[bucket.Region] = append(output[bucket.Region], bucket)
-		} else {
-			output["Global"] = append(output["Global"], bucket)
+	output := make(map[string][]CloudFilesystem)
+	if applyConversion || applyGroupByRegion {
+		for _, bucket := range data {
+			if applyConversion {
+				bucket.ApplySizeConversion(outputOptions.SizeConversion)
+			}
+			if applyGroupByRegion {
+				output[bucket.GetRegion()] = append(output[bucket.GetRegion()], bucket)
+			} else {
+				output["Global"] = append(output["Global"], bucket)
+			}
 		}
 	}
 	return output
 }
 
-func applySizeConversion(bucket *BucketDTO, sizeConversion float64) *BucketDTO {
-	bucket.SizeOfBucket = bucket.SizeOfBucket / math.Pow(float64(1024), sizeConversion)
-	for k, v := range bucket.StorageClassSize {
-		bucket.StorageClassSize[k] = v / math.Pow(float64(1024), sizeConversion)
-	}
-	return bucket
-}
-
-func orderByInc(key string, data []*BucketDTO) []*BucketDTO {
+func orderByInc(key string, data []CloudFilesystem) []CloudFilesystem {
 	switch key {
 	case "cost":
-		slices.SortStableFunc(data, func(a, b *BucketDTO) int {
-			return cmp.Compare(a.Cost, b.Cost)
+		slices.SortStableFunc(data, func(a, b CloudFilesystem) int {
+			return cmp.Compare(a.GetCost(), b.GetCost())
 		})
 	case "name":
-		slices.SortStableFunc(data, func(a, b *BucketDTO) int {
-			return cmp.Compare(a.Name, b.Name)
+		slices.SortStableFunc(data, func(a, b CloudFilesystem) int {
+			return cmp.Compare(a.GetName(), b.GetName())
 		})
 	case "size":
-		slices.SortStableFunc(data, func(a, b *BucketDTO) int {
-			return cmp.Compare(a.SizeOfBucket, b.SizeOfBucket)
+		slices.SortStableFunc(data, func(a, b CloudFilesystem) int {
+			return cmp.Compare(a.GetSizeOfBucket(), b.GetSizeOfBucket())
 		})
 	}
 	return data
 }
 
-func orderByDec(key string, data []*BucketDTO) []*BucketDTO {
+func orderByDec(key string, data []CloudFilesystem) []CloudFilesystem {
 	switch key {
 	case "cost":
-		slices.SortStableFunc(data, func(a, b *BucketDTO) int {
-			return (cmp.Compare(a.Cost, b.Cost) * -1)
+		slices.SortStableFunc(data, func(a, b CloudFilesystem) int {
+			return (cmp.Compare(a.GetCost(), b.GetCost()) * -1)
 		})
 	case "name":
-		slices.SortStableFunc(data, func(a, b *BucketDTO) int {
-			return (cmp.Compare(a.Name, b.Name) * -1)
+		slices.SortStableFunc(data, func(a, b CloudFilesystem) int {
+			return (cmp.Compare(a.GetName(), b.GetName()) * -1)
 		})
 	case "size":
-		slices.SortStableFunc(data, func(a, b *BucketDTO) int {
-			return (cmp.Compare(a.SizeOfBucket, b.SizeOfBucket) * -1)
+		slices.SortStableFunc(data, func(a, b CloudFilesystem) int {
+			return (cmp.Compare(a.GetSizeOfBucket(), b.GetSizeOfBucket()) * -1)
 		})
 	}
 	return data

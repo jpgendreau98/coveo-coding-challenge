@@ -1,8 +1,8 @@
 package util
 
 import (
+	"math"
 	"sync"
-	"time"
 )
 
 type CliOptions struct {
@@ -23,20 +23,17 @@ type OutputOptions struct {
 	SizeConversion float64
 }
 
-type BucketDTO struct {
-	Name             string
-	CreationDate     time.Time
-	NbOfFiles        int64
-	SizeOfBucket     float64
-	LastUpdateDate   time.Time
-	Cost             float64
-	StorageClassSize StorageClassSizeMap
-	Region           string
-}
-
 type StorageClassSize struct {
 	SizeMap RegionsStorageMap
 	Mutex   sync.Mutex
 }
 type RegionsStorageMap map[string]map[string]float64
 type StorageClassSizeMap map[string]float64
+
+func (smap *RegionsStorageMap) ApplyConversion(conversion float64) {
+	for _, v := range *smap {
+		for k, s := range v {
+			v[k] = s / math.Pow(float64(1024), conversion)
+		}
+	}
+}

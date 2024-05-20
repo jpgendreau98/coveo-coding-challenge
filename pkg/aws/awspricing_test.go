@@ -115,7 +115,7 @@ func TestGetTierPriceList(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		output := GetTierPriceList(test.totalStorageClassSize, test.priceList, float64(0))
+		output := GetTierPriceList(test.totalStorageClassSize, test.priceList)
 		assert.Equal(t, test.expectedOutput, output)
 	}
 }
