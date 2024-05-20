@@ -10,14 +10,13 @@ import (
 
 	"projet-devops-coveo/pkg/util"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/private/protocol"
-	"github.com/aws/aws-sdk-go/service/pricing"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/pricing"
+	"github.com/aws/aws-sdk-go-v2/service/pricing/types"
 )
 
 type AwsPricing struct {
-	Session *pricing.Pricing
+	Session *AwsClient
 }
 
 type RegionSkuList map[string][]Product
@@ -25,12 +24,9 @@ type MasterPriceList map[string]ProductPriceList
 type ProductPriceList map[string]PriceList
 
 // Establish connections to aws pricing services.
-func InitConnectionPricingList() *AwsPricing {
-	session, _ := session.NewSession(&aws.Config{
-		Region: aws.String("us-east-1"),
-	})
+func InitConnectionPricingList(awsClient *AwsClient) *AwsPricing {
 	return &AwsPricing{
-		Session: pricing.New(session),
+		Session: awsClient,
 	}
 }
 
@@ -70,7 +66,7 @@ func (ap *AwsPricing) getProductWithArn(priceListArn *string) (list []Product, e
 	if err != nil {
 		return nil, err
 	}
-	resp, err := http.Get(aws.StringValue(results.Url))
+	resp, err := http.Get(*results.Url)
 	if err != nil {
 		return nil, err
 	}
@@ -116,16 +112,16 @@ func (ap *AwsPricing) GetRegionPriceList(regionSkuList RegionSkuList) MasterPric
 
 // Get a price list with a sku.
 func (ap *AwsPricing) GetPriceListWithSku(sku string) (*pricing.GetProductsOutput, error) {
-	filters := []*pricing.Filter{{
+	filters := []types.Filter{{
 		Field: aws.String("sku"),
 		Value: aws.String(sku),
-		Type:  aws.String("TERM_MATCH"),
+		Type:  types.FilterTypeTermMatch,
 	}}
-	input := pricing.GetProductsInput{
+	input := &pricing.GetProductsInput{
 		Filters:     filters,
 		ServiceCode: aws.String("AmazonS3"),
 	}
-	productPrice, err := ap.Session.GetProducts(&input)
+	productPrice, err := ap.Session.GetProducts(input)
 	if err != nil {
 		return nil, err
 	}
@@ -134,8 +130,7 @@ func (ap *AwsPricing) GetPriceListWithSku(sku string) (*pricing.GetProductsOutpu
 
 // Decode a pricing list from AWS.
 func DecodePricingList(productPrice *pricing.GetProductsOutput) (priceList PriceList, err error) {
-	striout, _ := protocol.EncodeJSONValue(productPrice.PriceList[0], protocol.NoEscape)
-	err = json.Unmarshal([]byte(striout), &priceList)
+	err = json.Unmarshal([]byte(productPrice.PriceList[0]), &priceList)
 	if err != nil {
 		return priceList, err
 	}
@@ -143,11 +138,11 @@ func DecodePricingList(productPrice *pricing.GetProductsOutput) (priceList Price
 }
 
 // Calculate the average price for a SKU. It will take the total size of all the storage class and return a map of average price per storage class.
-func GetTierPriceList(totalStorageClassSize util.StorageClassSizeMap, priceList ProductPriceList, conversion float64) map[string]float64 {
+func GetTierPriceList(totalStorageClassSize util.StorageClassSizeMap, priceList ProductPriceList) map[string]float64 {
 	tierList := make(map[string]float64)
 	for k, v := range totalStorageClassSize {
 		priceListForSku := priceList[GetStorageClassType(k)]
-		price, err := getPriceForSize(TransformSizeToGB(v, conversion), priceListForSku)
+		price, err := getPriceForSize(TransformSizeToGB(v), priceListForSku)
 		if err != nil {
 			fmt.Println(err)
 			continue

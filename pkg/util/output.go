@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"encoding/json"
 	"fmt"
+	"math"
 	"os"
 	"slices"
 )
@@ -18,12 +19,7 @@ func OutputData(buckets []*BucketDTO, options OutputOptions) error {
 
 	}
 	output["S3"] = buckets
-	if options.GroupBy != "" {
-		switch options.GroupBy {
-		case "region":
-			output["S3"] = groupByRegion(buckets)
-		}
-	}
+	output["S3"] = applyOutputOptions(buckets, options)
 	data, err := json.MarshalIndent(output, "", "    ")
 	if err != nil {
 		return err
@@ -39,12 +35,29 @@ func OutputData(buckets []*BucketDTO, options OutputOptions) error {
 	return nil
 }
 
-func groupByRegion(data []*BucketDTO) map[string][]*BucketDTO {
-	groupByOutput := make(map[string][]*BucketDTO)
+func applyOutputOptions(data []*BucketDTO, outputOptions OutputOptions) map[string][]*BucketDTO {
+	applyConversion := outputOptions.SizeConversion > 0
+	applyGroupByRegion := outputOptions.GroupBy == "region"
+	output := make(map[string][]*BucketDTO)
 	for _, bucket := range data {
-		groupByOutput[bucket.Region] = append(groupByOutput[bucket.Region], bucket)
+		if applyConversion {
+			bucket = applySizeConversion(bucket, outputOptions.SizeConversion)
+		}
+		if applyGroupByRegion {
+			output[bucket.Region] = append(output[bucket.Region], bucket)
+		} else {
+			output["Global"] = append(output["Global"], bucket)
+		}
 	}
-	return groupByOutput
+	return output
+}
+
+func applySizeConversion(bucket *BucketDTO, sizeConversion float64) *BucketDTO {
+	bucket.SizeOfBucket = bucket.SizeOfBucket / math.Pow(float64(1024), sizeConversion)
+	for k, v := range bucket.StorageClassSize {
+		bucket.StorageClassSize[k] = v / math.Pow(float64(1024), sizeConversion)
+	}
+	return bucket
 }
 
 func orderByInc(key string, data []*BucketDTO) []*BucketDTO {

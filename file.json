@@ -5,11 +5,11 @@
                 "Name": "coveo12345-poc-2",
                 "CreationDate": "2024-05-18T15:32:07Z",
                 "NbOfFiles": 100,
-                "SizeOfBucket": 628000,
+                "SizeOfBucket": 0.0005848705768585205,
                 "LastUpdateDate": "2024-05-19T11:42:07-04:00",
-                "Cost": 0.000014036893966618004,
+                "Cost": 0.000014621764639344283,
                 "StorageClassSize": {
-                    "STANDARD": 628000
+                    "STANDARD": 0.0005848705768585205
                 },
                 "Region": "ca-central-1"
             },
@@ -17,13 +17,47 @@
                 "Name": "coveo12345-poc",
                 "CreationDate": "2024-05-18T15:31:59Z",
                 "NbOfFiles": 79,
-                "SizeOfBucket": 489840,
+                "SizeOfBucket": 0.000456199049949646,
                 "LastUpdateDate": "2024-05-18T12:07:07-04:00",
-                "Cost": 0.000010948777293962042,
+                "Cost": 0.00001140497641868854,
                 "StorageClassSize": {
-                    "STANDARD": 489840
+                    "STANDARD": 0.000456199049949646
                 },
                 "Region": "ca-central-1"
+            },
+            {
+                "Name": "coveo12345-poc-3",
+                "CreationDate": "2024-05-18T15:32:14Z",
+                "NbOfFiles": 0,
+                "SizeOfBucket": 0,
+                "LastUpdateDate": "0001-01-01T00:00:00Z",
+                "Cost": 0,
+                "StorageClassSize": {},
+                "Region": "ca-central-1"
+            }
+        ],
+        "us-east-1": [
+            {
+                "Name": "coveo12345-poc-useast",
+                "CreationDate": "2024-05-19T00:21:25Z",
+                "NbOfFiles": 0,
+                "SizeOfBucket": 0,
+                "LastUpdateDate": "0001-01-01T00:00:00Z",
+                "Cost": 0,
+                "StorageClassSize": {},
+                "Region": "us-east-1"
+            }
+        ],
+        "us-west-1": [
+            {
+                "Name": "coveo12345-poc-usweast",
+                "CreationDate": "2024-05-19T01:03:17Z",
+                "NbOfFiles": 0,
+                "SizeOfBucket": 0,
+                "LastUpdateDate": "0001-01-01T00:00:00Z",
+                "Cost": 0,
+                "StorageClassSize": {},
+                "Region": "us-west-1"
             }
         ]
     }

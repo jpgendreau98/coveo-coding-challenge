@@ -13,9 +13,10 @@ import (
 func RunS3Command(options *util.CliOptions) error {
 	//Start the ratelimiter
 	limiter := ratelimit.New(options.RateLimit)
+	awsClient, err := aws.NewAwsClient(options.Regions[0], limiter)
 	//Fetching the price of the day.
 	fmt.Println("Fetching prices as of today...")
-	priceList, err := fetchPrices(*options)
+	priceList, err := fetchPrices(awsClient, *options)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -79,9 +80,9 @@ func initRegionStorageMap(regions []string) *util.StorageClassSize {
 	return globalStorageClassSize
 }
 
-func fetchPrices(options util.CliOptions) (aws.MasterPriceList, error) {
+func fetchPrices(awsClient *aws.AwsClient, options util.CliOptions) (aws.MasterPriceList, error) {
 	//Init connection to AWS pricing services
-	svc := aws.InitConnectionPricingList()
+	svc := aws.InitConnectionPricingList(awsClient)
 	//Get a list with all the skus for Amazon S3 product grouped by region
 	regionSkuList, err := svc.GetSkusForRegions(options.Regions)
 	if err != nil {

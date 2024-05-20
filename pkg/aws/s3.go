@@ -1,22 +1,21 @@
 package aws
 
 import (
+	"context"
 	"fmt"
-	"math"
 	"slices"
 	"sync"
 	"time"
 
 	"projet-devops-coveo/pkg/util"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"go.uber.org/ratelimit"
 )
 
 type S3 struct {
-	session               *s3.S3
+	session               *AwsClient
 	totalStorageClassSize *util.StorageClassSize
 	region                string
 	options               util.CliOptions
@@ -25,14 +24,13 @@ type S3 struct {
 
 // Establish connection with S3 services
 func InitConnection(region string, options util.CliOptions, globalStorageClass *util.StorageClassSize, limiter ratelimit.Limiter) (*S3, error) {
-	session, err := session.NewSession(&aws.Config{
-		Region: aws.String(region),
-	})
+	awsClient, err := NewAwsClient(region, limiter)
 	if err != nil {
 		return nil, err
 	}
+
 	return &S3{
-		session:               s3.New(session),
+		session:               awsClient,
 		totalStorageClassSize: globalStorageClass,
 		region:                region,
 		options:               options,
@@ -42,8 +40,7 @@ func InitConnection(region string, options util.CliOptions, globalStorageClass *
 
 // List All buckets and  returns a filtered list based on filters (name, region)
 func (fs *S3) GetBucketsFiltered() (bucketList []*util.BucketDTO) {
-	fs.limiter.Take()
-	output, err := fs.session.ListBuckets(nil)
+	output, err := fs.session.ListBuckets(&s3.ListBucketsInput{})
 	if err != nil {
 		fmt.Println(err.Error())
 	}
@@ -52,10 +49,15 @@ func (fs *S3) GetBucketsFiltered() (bucketList []*util.BucketDTO) {
 }
 
 // Fetch location of bucket and filter if not in wanted region or not included by name
-func (fs *S3) FilterBuckets(buckets []*s3.Bucket) (bucketList []*util.BucketDTO) {
+func (fs *S3) FilterBuckets(buckets []types.Bucket) (bucketList []*util.BucketDTO) {
 	for _, bucket := range buckets {
-		location := fs.GetBucketLocation(bucket)
-		bucket := fs.filterbucket(location, aws.StringValue(bucket.Name), *bucket.CreationDate)
+		location, err := fs.session.GetBucketLocation(&s3.GetBucketLocationInput{
+			Bucket: bucket.Name,
+		})
+		if err != nil {
+			fmt.Println(err)
+		}
+		bucket := fs.filterbucket(location, *bucket.Name, *bucket.CreationDate)
 		if bucket != nil {
 			bucketList = append(bucketList, bucket)
 		}
@@ -84,21 +86,6 @@ func (fs *S3) ListObjectsInBucket(regionBucket []*util.BucketDTO, region string,
 	defer wg.Done()
 	DTOBuckets := fs.GetObject(regionBucket, priceList)
 	bucketChan <- DTOBuckets
-}
-
-// Get bucket Location
-func (fs *S3) GetBucketLocation(bucket *s3.Bucket) string {
-	fs.limiter.Take()
-	result, err := fs.session.GetBucketLocation(&s3.GetBucketLocationInput{
-		Bucket: bucket.Name,
-	})
-	if err != nil {
-		fmt.Println(err)
-	}
-	if aws.StringValue(result.LocationConstraint) != "" {
-		return aws.StringValue(result.LocationConstraint)
-	}
-	return "us-east-1" //Problem with the API response that return empty strings when region is us-east-1
 }
 
 // Get objects of a buckets
@@ -138,45 +125,45 @@ func (fs *S3) FetchBucket(bucket *util.BucketDTO, bucketChan chan (*util.BucketD
 	var nbOfFiles int64
 	var lastModifiedBucket time.Time
 	loc, _ := time.LoadLocation("Local")
-
-	input := &s3.ListObjectsV2Input{
-		Bucket: aws.String(bucket.Name),
-	}
 	//Recursively, list objects in a bucket and build the bucket metadata at the same time.
-	err := fs.session.ListObjectsV2Pages(input,
-		func(page *s3.ListObjectsV2Output, lastPage bool) bool {
-			nbOfFiles = aws.Int64Value(page.KeyCount)
-			for _, obj := range page.Contents {
-				if fs.options.FilterByStorageClass != nil {
-					if len(fs.options.FilterByStorageClass) != 0 && fs.options.FilterByStorageClass != nil &&
-						!slices.Contains(fs.options.FilterByStorageClass, aws.StringValue(obj.StorageClass)) {
-						continue
-					}
-				}
+	ctx := context.Background()
+	paginator := s3.NewListObjectsV2Paginator(fs.session.s3, &s3.ListObjectsV2Input{
+		Bucket: &bucket.Name,
+	})
 
-				totalSize += *obj.Size
-				storageClassSize[aws.StringValue(obj.StorageClass)] += (float64(*obj.Size))
+	// Iterate through pages
+	for paginator.HasMorePages() {
+		// Get the next page of objects
+		resp, err := paginator.NextPage(ctx)
+		if err != nil {
+			fmt.Println(err)
+		}
 
-				fs.totalStorageClassSize.Mutex.Lock()
-				fs.totalStorageClassSize.SizeMap[fs.region][aws.StringValue(obj.StorageClass)] += float64(*obj.Size)
-				fs.totalStorageClassSize.Mutex.Unlock()
-
-				if lastModifiedBucket.Before(*obj.LastModified) {
-					currentTime := obj.LastModified.In(loc)
-					lastModifiedBucket = currentTime
+		// Process objects
+		for _, obj := range resp.Contents {
+			if fs.options.FilterByStorageClass != nil {
+				if len(fs.options.FilterByStorageClass) != 0 && fs.options.FilterByStorageClass != nil &&
+					!slices.Contains(fs.options.FilterByStorageClass, GetStorageClassConstant(obj.StorageClass)) {
+					continue
 				}
 			}
-			fs.limiter.Take()
-			return !lastPage
-		})
+			nbOfFiles += 1
+			totalSize += *obj.Size
+			storageClassSize[GetStorageClassConstant(obj.StorageClass)] += (float64(*obj.Size))
 
-	if err != nil {
-		fmt.Println("Error listing objects:", err)
-		return
+			fs.totalStorageClassSize.Mutex.Lock()
+			fs.totalStorageClassSize.SizeMap[fs.region][GetStorageClassConstant(obj.StorageClass)] += float64(*obj.Size)
+			fs.totalStorageClassSize.Mutex.Unlock()
+
+			if lastModifiedBucket.Before(*obj.LastModified) {
+				currentTime := obj.LastModified.In(loc)
+				lastModifiedBucket = currentTime
+			}
+		}
 	}
 
 	bucket.NbOfFiles = nbOfFiles
-	bucket.SizeOfBucket = float64(totalSize) / (math.Pow(float64(1024), fs.options.OutputOptions.SizeConversion))
+	bucket.SizeOfBucket = float64(totalSize)
 	bucket.StorageClassSize = storageClassSize
 	bucket.LastUpdateDate = lastModifiedBucket
 
@@ -185,13 +172,12 @@ func (fs *S3) FetchBucket(bucket *util.BucketDTO, bucketChan chan (*util.BucketD
 
 // Set the bucket cost based on total cost of S3 Service
 func (fs *S3) SetBucketCost(buckets []*util.BucketDTO, priceList MasterPriceList) {
-	tierListPrice := GetTierPriceList(fs.totalStorageClassSize.SizeMap[fs.region], priceList[fs.region], fs.options.OutputOptions.SizeConversion)
+	tierListPrice := GetTierPriceList(fs.totalStorageClassSize.SizeMap[fs.region], priceList[fs.region])
 	for _, bucket := range buckets {
 		var total float64
 		for k, v := range bucket.StorageClassSize {
-			totalSize := float64(fs.totalStorageClassSize.SizeMap[fs.region][k]) / (math.Pow(float64(1024), fs.options.OutputOptions.SizeConversion))
-			total += (TransformSizeToGB(v, fs.options.OutputOptions.SizeConversion) / TransformSizeToGB(totalSize, fs.options.OutputOptions.SizeConversion)) *
-				(tierListPrice[k] * TransformSizeToGB(totalSize, fs.options.OutputOptions.SizeConversion))
+			totalSize := float64(fs.totalStorageClassSize.SizeMap[fs.region][k])
+			total += (TransformSizeToGB(v) / TransformSizeToGB(totalSize)) * (tierListPrice[k] * TransformSizeToGB(totalSize))
 		}
 		bucket.Cost = total
 	}
